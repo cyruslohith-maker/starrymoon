@@ -1,0 +1,144 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #FFF5F7;
+  --foreground: #4A2040;
+  --card: #FFFFFF;
+  --card-foreground: #4A2040;
+  --popover: #FFFFFF;
+  --popover-foreground: #4A2040;
+  --primary: #F472B6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FDE8EF;
+  --secondary-foreground: #9D174D;
+  --muted: #FDE8EF;
+  --muted-foreground: #9D7490;
+  --accent: #FBCFE8;
+  --accent-foreground: #831843;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #F9A8D4;
+  --input: #F9A8D4;
+  --ring: #F472B6;
+  --chart-1: #F472B6;
+  --chart-2: #EC4899;
+  --chart-3: #DB2777;
+  --chart-4: #FBCFE8;
+  --chart-5: #F9A8D4;
+  --radius: 1rem;
+  --sidebar: #FDE8EF;
+  --sidebar-foreground: #4A2040;
+  --sidebar-primary: #F472B6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FBCFE8;
+  --sidebar-accent-foreground: #831843;
+  --sidebar-border: #F9A8D4;
+  --sidebar-ring: #F472B6;
+}
+
+@theme inline {
+  --font-sans: 'Nunito', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply text-foreground;
+    background-color: #FFF5F7;
+    background-image: url('/images/gingham-bg.jpeg');
+    background-size: 300px 300px;
+    background-repeat: repeat;
+  }
+}
+
+/* Container background variants using the provided pink gradient images */
+.bg-container-soft {
+  background-image: url('/images/pink-gradient-soft.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-container-deep {
+  background-image: url('/images/pink-gradient-deep.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Floating animation for decorative elements */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FDE8EF;
+}
+::-webkit-scrollbar-thumb {
+  background: #F9A8D4;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F472B6;
+}
