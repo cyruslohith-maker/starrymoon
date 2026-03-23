@@ -2,14 +2,15 @@ import type { Metadata, Viewport } from 'next'
 import { Nunito, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/lib/cart-context'
+import { LoadingScreen } from '@/components/loading-screen'
 import './globals.css'
 
-const nunito = Nunito({ 
+const nunito = Nunito({
   subsets: ["latin"],
   variable: '--font-nunito',
 })
 
-const playfair = Playfair_Display({ 
+const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: '--font-playfair',
 })
@@ -54,6 +55,7 @@ export default function RootLayout({
     <html lang="en" className={`${nunito.variable} ${playfair.variable}`}>
       <body className="font-sans antialiased">
         <CartProvider>
+          <LoadingScreen />
           {children}
         </CartProvider>
         <Analytics />
