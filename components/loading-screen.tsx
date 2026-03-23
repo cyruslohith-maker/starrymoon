@@ -40,7 +40,7 @@ export function LoadingScreen() {
         >
             <video
                 ref={videoRef}
-                src="/loading-mascot.mp4"
+                src="/loading-mascot.mp4?v=2"
                 autoPlay
                 muted
                 playsInline
