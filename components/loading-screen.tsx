@@ -12,14 +12,13 @@ export function LoadingScreen() {
         if (!video) return
 
         const handleEnded = () => {
-            // Start fade-out when video finishes
             setFadeOut(true)
             setTimeout(() => setVisible(false), 600)
         }
 
         video.addEventListener("ended", handleEnded)
 
-        // Fallback: if video takes too long or fails, auto-dismiss after 5s
+        // Fallback: auto-dismiss after 5s
         const fallback = setTimeout(() => {
             setFadeOut(true)
             setTimeout(() => setVisible(false), 600)
@@ -39,7 +38,6 @@ export function LoadingScreen() {
             aria-label="Loading"
             role="status"
         >
-            {/* Video animation */}
             <video
                 ref={videoRef}
                 src="/loading-mascot.mp4"
@@ -48,10 +46,6 @@ export function LoadingScreen() {
                 playsInline
                 className="loading-video"
             />
-
-            {/* Brand text below video */}
-            <p className="loading-text">St4rrymoon</p>
-            <p className="loading-subtext">loading your sparkle...</p>
         </div>
     )
 }
