@@ -9,7 +9,7 @@ import {
 import type { Product } from "@/lib/data"
 import {
     Plus, Pencil, Trash2, X, Truck, Package,
-    ExternalLink, ChevronDown, Search,
+    ExternalLink, ChevronDown, Search, MapPin, Loader2,
 } from "lucide-react"
 
 const statusLabels = {
@@ -39,6 +39,19 @@ const emptyOrder: Omit<Order, "id" | "createdAt"> = {
     notes: "",
 }
 
+interface TrackingCheckpoint {
+    status?: string
+    location?: string
+    date?: string
+    remark?: string
+}
+
+interface TrackingData {
+    currentStatus?: string
+    checkpoints?: TrackingCheckpoint[]
+    [key: string]: unknown
+}
+
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([])
     const [products, setProducts] = useState<Product[]>([])
@@ -48,6 +61,12 @@ export default function OrdersPage() {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [form, setForm] = useState(emptyOrder)
     const [showStatusDropdown, setShowStatusDropdown] = useState<string | null>(null)
+
+    // Live tracking state
+    const [trackingAwb, setTrackingAwb] = useState<string | null>(null)
+    const [trackingData, setTrackingData] = useState<TrackingData | null>(null)
+    const [trackingLoading, setTrackingLoading] = useState(false)
+    const [trackingError, setTrackingError] = useState<string | null>(null)
 
     useEffect(() => {
         setOrders(getOrders())
@@ -121,6 +140,32 @@ export default function OrdersPage() {
         setForm({ ...form, items: form.items.filter((i) => i.productId !== productId) })
     }
 
+    // ── Live tracking via secure API route ──
+    const trackShipment = async (awb: string) => {
+        setTrackingAwb(awb)
+        setTrackingData(null)
+        setTrackingError(null)
+        setTrackingLoading(true)
+
+        try {
+            const res = await fetch("/api/fship/track", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ waybill: awb }),
+            })
+            const data = await res.json()
+            if (!res.ok) {
+                setTrackingError(data.error || "Failed to fetch tracking data")
+            } else {
+                setTrackingData(data)
+            }
+        } catch {
+            setTrackingError("Network error — check your connection")
+        } finally {
+            setTrackingLoading(false)
+        }
+    }
+
     return (
         <div>
             {/* Header */}
@@ -154,10 +199,10 @@ export default function OrdersPage() {
                 <div className="flex items-start gap-3">
                     <Truck className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
                     <div>
-                        <p className="text-sm font-bold text-violet-900">Fship Logistics Integration</p>
+                        <p className="text-sm font-bold text-violet-900">Fship Logistics — Live Tracking Enabled</p>
                         <p className="mt-1 text-xs text-violet-700">
-                            Add AWB numbers from your Fship dashboard to each order for tracking.
-                            Customers can track shipments via Fship&apos;s tracking page.
+                            Add AWB numbers to orders and click &quot;Track&quot; for real-time shipment status.
+                            Your API key is stored securely on the server and never exposed to browsers.
                         </p>
                     </div>
                 </div>
@@ -242,18 +287,26 @@ export default function OrdersPage() {
                                     </div>
 
                                     {o.awbNumber && (
-                                        <p className="mt-2 text-xs text-muted-foreground">
-                                            📦 AWB: <span className="font-bold text-foreground">{o.awbNumber}</span>
-                                            {" · "}
+                                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                                            <p className="text-xs text-muted-foreground">
+                                                📦 AWB: <span className="font-bold text-foreground">{o.awbNumber}</span>
+                                            </p>
+                                            <button
+                                                onClick={() => trackShipment(o.awbNumber!)}
+                                                className="flex items-center gap-1 rounded-lg bg-violet-500/10 px-2.5 py-1 text-[10px] font-bold text-violet-600 transition-colors hover:bg-violet-500/20"
+                                            >
+                                                <MapPin className="h-3 w-3" />
+                                                Track Live
+                                            </button>
                                             <a
                                                 href={`https://www.fship.in/tracking/${o.awbNumber}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="font-bold text-primary hover:underline"
+                                                className="text-[10px] font-bold text-primary hover:underline"
                                             >
-                                                Track on Fship ↗
+                                                Fship page ↗
                                             </a>
-                                        </p>
+                                        </div>
                                     )}
 
                                     {o.notes && (
@@ -278,6 +331,78 @@ export default function OrdersPage() {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* ─── LIVE TRACKING MODAL ─── */}
+            {trackingAwb && (
+                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-16 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+                        <div className="mb-5 flex items-center justify-between">
+                            <h2 className="font-serif text-lg font-bold text-foreground">
+                                Shipment Tracking
+                            </h2>
+                            <button onClick={() => { setTrackingAwb(null); setTrackingData(null); setTrackingError(null) }} className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary">
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <p className="mb-4 text-xs text-muted-foreground">
+                            AWB: <span className="font-bold text-foreground">{trackingAwb}</span>
+                        </p>
+
+                        {trackingLoading && (
+                            <div className="flex items-center justify-center gap-2 py-8">
+                                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                                <span className="text-sm text-muted-foreground">Fetching tracking data...</span>
+                            </div>
+                        )}
+
+                        {trackingError && (
+                            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+                                <p className="text-sm font-semibold text-destructive">{trackingError}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    Make sure your Fship API key is set in .env.local and the AWB is correct.
+                                </p>
+                            </div>
+                        )}
+
+                        {trackingData && !trackingError && (
+                            <div>
+                                {trackingData.currentStatus && (
+                                    <div className="mb-4 rounded-xl bg-emerald-500/10 p-3">
+                                        <p className="text-xs font-bold text-emerald-700">Current Status</p>
+                                        <p className="text-sm font-bold text-emerald-900">{trackingData.currentStatus}</p>
+                                    </div>
+                                )}
+
+                                {trackingData.checkpoints && trackingData.checkpoints.length > 0 ? (
+                                    <div>
+                                        <p className="mb-2 text-xs font-bold text-muted-foreground">Tracking History</p>
+                                        <div className="flex flex-col gap-2">
+                                            {trackingData.checkpoints.map((cp: TrackingCheckpoint, i: number) => (
+                                                <div key={i} className="flex gap-3 rounded-lg bg-secondary/50 p-3">
+                                                    <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                                                    <div>
+                                                        <p className="text-xs font-bold text-foreground">{cp.status || cp.remark || "Update"}</p>
+                                                        {cp.location && <p className="text-[10px] text-muted-foreground">📍 {cp.location}</p>}
+                                                        {cp.date && <p className="text-[10px] text-muted-foreground">{cp.date}</p>}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-xl bg-secondary/50 p-4">
+                                        <p className="text-xs text-muted-foreground">Raw API response:</p>
+                                        <pre className="mt-2 max-h-48 overflow-auto text-[10px] text-foreground">
+                                            {JSON.stringify(trackingData, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
