@@ -10,6 +10,7 @@ export interface Product {
   colors?: string[]
   sizes?: string[]
   inStock?: boolean
+  quantity?: number
 }
 
 export const categories = [

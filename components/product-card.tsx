@@ -4,13 +4,19 @@ import Image from "next/image"
 import Link from "next/link"
 import { Heart, Plus, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useCart } from "@/lib/cart-context"
 import type { Product } from "@/lib/data"
+import { getDiscountedPrice } from "@/lib/dashboard-store"
 
 export function ProductCard({ product }: { product: Product }) {
   const [liked, setLiked] = useState(false)
   const { addItem } = useCart()
+  const [discountedPrice, setDiscountedPrice] = useState<number | null>(null)
+
+  useEffect(() => {
+    setDiscountedPrice(getDiscountedPrice(product))
+  }, [product])
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
@@ -31,6 +37,13 @@ export function ProductCard({ product }: { product: Product }) {
           </span>
         )}
 
+        {/* Discount badge */}
+        {discountedPrice !== null && (
+          <span className="absolute right-3 top-3 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10px] font-bold uppercase text-white">
+            Sale
+          </span>
+        )}
+
         {/* Heart button */}
         <button
           onClick={(e) => {
@@ -38,6 +51,7 @@ export function ProductCard({ product }: { product: Product }) {
             setLiked(!liked)
           }}
           className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm transition-colors hover:bg-card"
+          style={discountedPrice !== null ? { top: "2.5rem" } : {}}
           aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
         >
           <Heart
@@ -56,9 +70,16 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </h3>
         </Link>
-        <p className="text-lg font-bold text-foreground">
-          {"\u20B9"}{product.price}
-        </p>
+        {discountedPrice !== null ? (
+          <div className="flex items-center gap-2">
+            <p className="text-lg font-bold text-foreground">{"\u20B9"}{discountedPrice}</p>
+            <p className="text-sm text-muted-foreground line-through">{"\u20B9"}{product.price}</p>
+          </div>
+        ) : (
+          <p className="text-lg font-bold text-foreground">
+            {"\u20B9"}{product.price}
+          </p>
+        )}
         <div className="mt-auto flex items-center gap-2 pt-1">
           <Button
             size="sm"
