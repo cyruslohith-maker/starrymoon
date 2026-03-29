@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react"
 import {
-    getOrders, addOrder, updateOrder, deleteOrder,
+    getOrders as getLocalOrders, addOrder as addLocalOrder, updateOrder as updateLocalOrder, deleteOrder as deleteLocalOrder,
     getProducts,
-    type Order,
+    type Order as LocalOrder,
 } from "@/lib/dashboard-store"
 import type { Product } from "@/lib/data"
 import {
     Plus, Pencil, Trash2, X, Truck, Package,
     ExternalLink, ChevronDown, Search, MapPin, Loader2,
+    Download, Send,
 } from "lucide-react"
 
 const statusLabels = {
@@ -28,7 +29,7 @@ const statusColors = {
     cancelled: "bg-destructive/10 text-destructive",
 } as const
 
-const emptyOrder: Omit<Order, "id" | "createdAt"> = {
+const emptyOrder: Omit<LocalOrder, "id" | "createdAt"> = {
     customerName: "",
     phone: "",
     address: "",
@@ -37,6 +38,26 @@ const emptyOrder: Omit<Order, "id" | "createdAt"> = {
     status: "pending",
     awbNumber: "",
     notes: "",
+}
+
+// A unified order shape that works for both sources
+interface UnifiedOrder {
+    id: string
+    customerName: string
+    phone: string
+    email?: string
+    address: string
+    city?: string
+    state?: string
+    pincode?: string
+    items: { productId: string; productName: string; quantity: number; price: number }[]
+    total: number
+    status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled"
+    awbNumber?: string
+    notes?: string
+    createdAt: string
+    source: "server" | "local"
+    fshipPushed?: boolean
 }
 
 interface TrackingCheckpoint {
@@ -53,7 +74,7 @@ interface TrackingData {
 }
 
 export default function OrdersPage() {
-    const [orders, setOrders] = useState<Order[]>([])
+    const [orders, setOrders] = useState<UnifiedOrder[]>([])
     const [products, setProducts] = useState<Product[]>([])
     const [search, setSearch] = useState("")
     const [filterStatus, setFilterStatus] = useState("all")
@@ -68,19 +89,49 @@ export default function OrdersPage() {
     const [trackingLoading, setTrackingLoading] = useState(false)
     const [trackingError, setTrackingError] = useState<string | null>(null)
 
+    // Push to Fship state
+    const [pushingId, setPushingId] = useState<string | null>(null)
+    const [pushResult, setPushResult] = useState<{ id: string; msg: string; ok: boolean } | null>(null)
+
     useEffect(() => {
-        setOrders(getOrders())
+        loadOrders()
         setProducts(getProducts())
     }, [])
 
-    const refresh = () => setOrders(getOrders())
+    const loadOrders = async () => {
+        // Load from server
+        let serverOrders: UnifiedOrder[] = []
+        try {
+            const res = await fetch("/api/orders")
+            const data = await res.json()
+            if (data.orders) {
+                serverOrders = data.orders.map((o: Record<string, unknown>) => ({
+                    ...o,
+                    source: "server" as const,
+                }))
+            }
+        } catch {
+            // Server might not be available — fall back to local
+        }
+
+        // Load from local (manually added ones)
+        const localOrders: UnifiedOrder[] = getLocalOrders().map((o) => ({
+            ...o,
+            source: "local" as const,
+        }))
+
+        // Merge — server orders first, then local ones not duplicated
+        const serverIds = new Set(serverOrders.map((o) => o.id))
+        const merged = [...serverOrders, ...localOrders.filter((o) => !serverIds.has(o.id))]
+        setOrders(merged)
+    }
 
     const filtered = orders
         .filter((o) => {
             const matchesSearch =
                 o.customerName.toLowerCase().includes(search.toLowerCase()) ||
                 o.awbNumber?.toLowerCase().includes(search.toLowerCase()) ||
-                o.id.includes(search)
+                o.id.toLowerCase().includes(search.toLowerCase())
             const matchesStatus = filterStatus === "all" || o.status === filterStatus
             return matchesSearch && matchesStatus
         })
@@ -92,28 +143,62 @@ export default function OrdersPage() {
         setShowForm(true)
     }
 
-    const openEdit = (o: Order) => {
+    const openEdit = (o: UnifiedOrder) => {
         setEditingId(o.id)
         setForm({ ...o })
         setShowForm(true)
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!form.customerName) return
         const total = form.items.reduce((sum, i) => sum + i.price * i.quantity, 0)
         if (editingId) {
-            updateOrder(editingId, { ...form, total })
+            // Check if server order
+            const existing = orders.find((o) => o.id === editingId)
+            if (existing?.source === "server") {
+                await fetch("/api/orders", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: editingId, ...form, total }),
+                })
+            } else {
+                updateLocalOrder(editingId, { ...form, total })
+            }
         } else {
-            addOrder({ ...form, total })
+            addLocalOrder({ ...form, total })
         }
         setShowForm(false)
-        refresh()
+        await loadOrders()
     }
 
-    const changeStatus = (id: string, status: Order["status"]) => {
-        updateOrder(id, { status })
+    const changeStatus = async (id: string, status: UnifiedOrder["status"]) => {
+        const order = orders.find((o) => o.id === id)
+        if (order?.source === "server") {
+            await fetch("/api/orders", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, status }),
+            })
+        } else {
+            updateLocalOrder(id, { status })
+        }
         setShowStatusDropdown(null)
-        refresh()
+        await loadOrders()
+    }
+
+    const handleDelete = async (o: UnifiedOrder) => {
+        if (o.source === "local") {
+            deleteLocalOrder(o.id)
+        }
+        // For server orders we don't delete — just mark cancelled
+        if (o.source === "server") {
+            await fetch("/api/orders", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: o.id, status: "cancelled" }),
+            })
+        }
+        await loadOrders()
     }
 
     const addItemToOrder = (product: Product) => {
@@ -166,15 +251,69 @@ export default function OrdersPage() {
         }
     }
 
+    // ── Download CSV for Fship ──
+    const downloadCSV = () => {
+        window.open("/api/fship/csv", "_blank")
+    }
+
+    // ── Push order to Fship ──
+    const pushToFship = async (order: UnifiedOrder, useBackupWarehouse = false) => {
+        setPushingId(order.id)
+        setPushResult(null)
+
+        try {
+            const res = await fetch("/api/fship/create-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ order, useBackupWarehouse }),
+            })
+            const data = await res.json()
+
+            if (res.ok) {
+                // Try to extract AWB from response
+                const awb = data.waybill || data.awb || data.data?.waybill || ""
+                if (awb) {
+                    // Save AWB back to server order
+                    await fetch("/api/orders", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: order.id, awbNumber: awb, fshipPushed: true }),
+                    })
+                }
+                setPushResult({ id: order.id, msg: awb ? `Pushed! AWB: ${awb}` : "Pushed to Fship!", ok: true })
+                await loadOrders()
+            } else {
+                setPushResult({ id: order.id, msg: data.error || "Fship rejected the order", ok: false })
+            }
+        } catch {
+            setPushResult({ id: order.id, msg: "Network error", ok: false })
+        } finally {
+            setPushingId(null)
+        }
+    }
+
+    // Count server vs local
+    const serverCount = orders.filter((o) => o.source === "server").length
+    const localCount = orders.filter((o) => o.source === "local").length
+
     return (
         <div>
             {/* Header */}
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h1 className="font-serif text-2xl font-bold text-foreground">Orders & Shipping</h1>
-                    <p className="text-sm text-muted-foreground">{orders.length} orders total</p>
+                    <p className="text-sm text-muted-foreground">
+                        {orders.length} orders ({serverCount} from website, {localCount} manual)
+                    </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        onClick={downloadCSV}
+                        className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-600 hover:bg-emerald-500/20"
+                    >
+                        <Download className="h-3.5 w-3.5" />
+                        Export CSV
+                    </button>
                     <a
                         href="https://app.fship.in"
                         target="_blank"
@@ -182,7 +321,7 @@ export default function OrdersPage() {
                         className="flex items-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-bold text-secondary-foreground hover:bg-secondary/80"
                     >
                         <ExternalLink className="h-3.5 w-3.5" />
-                        Open Fship Dashboard
+                        Fship Dashboard
                     </a>
                     <button
                         onClick={openAdd}
@@ -199,10 +338,9 @@ export default function OrdersPage() {
                 <div className="flex items-start gap-3">
                     <Truck className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
                     <div>
-                        <p className="text-sm font-bold text-violet-900">Fship Logistics — Live Tracking Enabled</p>
+                        <p className="text-sm font-bold text-violet-900">Fship Logistics — Live Tracking + Auto-Import</p>
                         <p className="mt-1 text-xs text-violet-700">
-                            Add AWB numbers to orders and click &quot;Track&quot; for real-time shipment status.
-                            Your API key is stored securely on the server and never exposed to browsers.
+                            Customer orders are saved automatically. Use &quot;Export CSV&quot; for bulk upload or &quot;Push to Fship&quot; per order for direct API integration.
                         </p>
                     </div>
                 </div>
@@ -247,6 +385,9 @@ export default function OrdersPage() {
                                     <div className="flex flex-wrap items-center gap-2">
                                         <h3 className="text-sm font-bold text-foreground">{o.customerName}</h3>
                                         <span className="text-[10px] text-muted-foreground">#{o.id}</span>
+                                        <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${o.source === "server" ? "bg-blue-500/10 text-blue-500" : "bg-amber-500/10 text-amber-500"}`}>
+                                            {o.source === "server" ? "Website" : "Manual"}
+                                        </span>
 
                                         {/* Status badge with dropdown */}
                                         <div className="relative">
@@ -259,7 +400,7 @@ export default function OrdersPage() {
                                             </button>
                                             {showStatusDropdown === o.id && (
                                                 <div className="absolute left-0 top-full z-10 mt-1 w-36 rounded-xl border border-border bg-card p-1 shadow-xl">
-                                                    {(Object.keys(statusLabels) as Order["status"][]).map((s) => (
+                                                    {(Object.keys(statusLabels) as UnifiedOrder["status"][]).map((s) => (
                                                         <button
                                                             key={s}
                                                             onClick={() => changeStatus(o.id, s)}
@@ -274,7 +415,7 @@ export default function OrdersPage() {
                                     </div>
 
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        📞 {o.phone} · 📍 {o.address}
+                                        📞 {o.phone} {o.city && `· 📍 ${o.city}`}{o.pincode && `, ${o.pincode}`}
                                     </p>
 
                                     {/* Items */}
@@ -286,6 +427,7 @@ export default function OrdersPage() {
                                         ))}
                                     </div>
 
+                                    {/* AWB + Tracking */}
                                     {o.awbNumber && (
                                         <div className="mt-2 flex flex-wrap items-center gap-2">
                                             <p className="text-xs text-muted-foreground">
@@ -309,6 +451,41 @@ export default function OrdersPage() {
                                         </div>
                                     )}
 
+                                    {/* Push to Fship buttons with warehouse selection */}
+                                    {o.source === "server" && !o.fshipPushed && !o.awbNumber && (
+                                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                                            <button
+                                                onClick={() => pushToFship(o, false)}
+                                                disabled={pushingId === o.id}
+                                                className="flex items-center gap-1 rounded-lg bg-indigo-500/10 px-3 py-1.5 text-[10px] font-bold text-indigo-600 transition-colors hover:bg-indigo-500/20 disabled:opacity-50"
+                                            >
+                                                {pushingId === o.id ? (
+                                                    <><Loader2 className="h-3 w-3 animate-spin" /> Pushing...</>
+                                                ) : (
+                                                    <><Send className="h-3 w-3" /> Push (W0 — Primary)</>
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => pushToFship(o, true)}
+                                                disabled={pushingId === o.id}
+                                                className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-3 py-1.5 text-[10px] font-bold text-amber-600 transition-colors hover:bg-amber-500/20 disabled:opacity-50"
+                                            >
+                                                <Send className="h-3 w-3" /> Push (W3 — Backup)
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {o.fshipPushed && (
+                                        <p className="mt-1 text-[10px] font-bold text-emerald-600">✓ Pushed to Fship</p>
+                                    )}
+
+                                    {/* Push result message */}
+                                    {pushResult?.id === o.id && (
+                                        <p className={`mt-1 text-[10px] font-bold ${pushResult.ok ? "text-emerald-600" : "text-destructive"}`}>
+                                            {pushResult.msg}
+                                        </p>
+                                    )}
+
                                     {o.notes && (
                                         <p className="mt-1 text-xs italic text-muted-foreground">Note: {o.notes}</p>
                                     )}
@@ -323,7 +500,7 @@ export default function OrdersPage() {
                                         <button onClick={() => openEdit(o)} className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground">
                                             <Pencil className="h-3.5 w-3.5" />
                                         </button>
-                                        <button onClick={() => { deleteOrder(o.id); refresh() }} className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                                        <button onClick={() => handleDelete(o)} className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
                                             <Trash2 className="h-3.5 w-3.5" />
                                         </button>
                                     </div>
@@ -432,7 +609,7 @@ export default function OrdersPage() {
                                 </div>
                                 <div>
                                     <label className="mb-1 block text-xs font-bold text-muted-foreground">Status</label>
-                                    <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as Order["status"] })} className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary">
+                                    <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as UnifiedOrder["status"] })} className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary">
                                         {Object.entries(statusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                                     </select>
                                 </div>

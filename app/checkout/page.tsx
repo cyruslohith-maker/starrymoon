@@ -30,6 +30,9 @@ export default function CheckoutPage() {
   const { items, subtotal, specialRequest, clearCart } = useCart()
   const [currentStep, setCurrentStep] = useState(1)
   const [orderPlaced, setOrderPlaced] = useState(false)
+  const [orderId, setOrderId] = useState("")
+  const [isPlacing, setIsPlacing] = useState(false)
+  const [placeError, setPlaceError] = useState("")
 
   // Form state
   const [contact, setContact] = useState({ name: "", email: "", phone: "", whatsapp: "" })
@@ -38,9 +41,52 @@ export default function CheckoutPage() {
   const shippingCost = subtotal >= 499 ? 0 : 49
   const total = subtotal + shippingCost
 
-  const handlePlaceOrder = () => {
-    setOrderPlaced(true)
-    clearCart()
+  const handlePlaceOrder = async () => {
+    setIsPlacing(true)
+    setPlaceError("")
+    try {
+      const orderPayload = {
+        customerName: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        whatsapp: contact.whatsapp,
+        address: shipping.address,
+        city: shipping.city,
+        state: shipping.state,
+        pincode: shipping.pincode,
+        items: items.map((i) => ({
+          productId: i.product.id,
+          productName: i.product.name,
+          quantity: i.quantity,
+          price: i.product.price,
+          size: i.size,
+        })),
+        subtotal,
+        shippingCost,
+        total,
+        specialRequest,
+        paymentMode: "Prepaid",
+      }
+
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.order) {
+        setOrderId(data.order.id)
+        setOrderPlaced(true)
+        clearCart()
+      } else {
+        setPlaceError(data.error || "Failed to place order. Please try again.")
+      }
+    } catch {
+      setPlaceError("Network error. Please check your connection and try again.")
+    } finally {
+      setIsPlacing(false)
+    }
   }
 
   if (orderPlaced) {
@@ -53,6 +99,9 @@ export default function CheckoutPage() {
           <h1 className="mb-3 font-serif text-3xl font-bold text-foreground">
             Order Placed!
           </h1>
+          {orderId && (
+            <p className="mb-2 text-xs font-bold text-primary">Order ID: {orderId}</p>
+          )}
           <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
             Thank you for shopping with St4rrymoon! We will send you order updates via WhatsApp.
             Your handmade piece will be crafted with extra love and care.
@@ -123,28 +172,25 @@ export default function CheckoutPage() {
           {steps.map((step, i) => (
             <div key={step.id} className="flex items-center gap-2">
               <div
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                  currentStep > step.id
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-colors ${currentStep > step.id
+                  ? "bg-primary text-primary-foreground"
+                  : currentStep === step.id
                     ? "bg-primary text-primary-foreground"
-                    : currentStep === step.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-muted-foreground"
-                }`}
+                    : "bg-secondary text-muted-foreground"
+                  }`}
               >
                 {currentStep > step.id ? <Check className="h-4 w-4" /> : step.id}
               </div>
               <span
-                className={`hidden text-xs font-semibold sm:block ${
-                  currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
-                }`}
+                className={`hidden text-xs font-semibold sm:block ${currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                  }`}
               >
                 {step.label}
               </span>
               {i < steps.length - 1 && (
                 <div
-                  className={`mx-2 h-px w-8 sm:w-12 ${
-                    currentStep > step.id ? "bg-primary" : "bg-border"
-                  }`}
+                  className={`mx-2 h-px w-8 sm:w-12 ${currentStep > step.id ? "bg-primary" : "bg-border"
+                    }`}
                 />
               )}
             </div>
@@ -254,12 +300,18 @@ export default function CheckoutPage() {
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               ) : (
-                <Button
-                  className="rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90"
-                  onClick={handlePlaceOrder}
-                >
-                  Place Order
-                </Button>
+                <>
+                  <Button
+                    className="rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90"
+                    onClick={handlePlaceOrder}
+                    disabled={isPlacing}
+                  >
+                    {isPlacing ? "Placing Order..." : "Place Order"}
+                  </Button>
+                  {placeError && (
+                    <p className="mt-2 text-xs font-semibold text-destructive">{placeError}</p>
+                  )}
+                </>
               )}
             </div>
           </div>
