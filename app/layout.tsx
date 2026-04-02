@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Nunito, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/lib/cart-context'
+import { AuthProvider } from '@/lib/auth-context'
 import { LoadingScreen } from '@/components/loading-screen'
 import './globals.css'
 
@@ -54,12 +55,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${nunito.variable} ${playfair.variable}`}>
       <body className="font-sans antialiased">
-        <CartProvider>
-          <LoadingScreen />
-          {children}
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <LoadingScreen />
+            {children}
+          </CartProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>
   )
 }
+

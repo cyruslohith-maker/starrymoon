@@ -1,0 +1,11 @@
+[
+  {
+    "id": "USR-OWNER001",
+    "name": "St4rrymoon Owner",
+    "email": "owner@st4rrymoon.com",
+    "passwordHash": "cb27a66d13277c36f00da1d0d7aa09431e619685239e371ba6a5139247595fd138a8b50a632877b85e95cebb24e84beab2cb77a94b292897477cd122b6bc4906",
+    "salt": "830675306d651f138b025845f0b94114",
+    "role": "owner",
+    "createdAt": "2026-03-29T21:40:21.146Z"
+  }
+]
