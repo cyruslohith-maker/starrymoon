@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server"
-import { promises as fs } from "fs"
-import path from "path"
-
-const ORDERS_FILE = path.join(process.cwd(), "data", "orders.json")
+import { supabase } from "@/lib/supabase"
 
 /**
  * GET /api/fship/csv — Generate Fship-compatible CSV from stored orders
@@ -10,8 +7,12 @@ const ORDERS_FILE = path.join(process.cwd(), "data", "orders.json")
  */
 export async function GET() {
     try {
-        const raw = await fs.readFile(ORDERS_FILE, "utf-8")
-        const orders = JSON.parse(raw)
+        const { data: orders, error } = await supabase
+            .from("orders")
+            .select("*")
+            .order("created_at", { ascending: false })
+
+        if (error) throw error
 
         // Fship standard CSV columns
         const headers = [
@@ -37,21 +38,21 @@ export async function GET() {
             "Height (cm)",
         ]
 
-        const rows = orders.map((order: {
+        const rows = (orders || []).map((order: {
             id: string
-            createdAt: string
-            customerName: string
+            created_at: string
+            customer_name: string
             phone: string
             email: string
             address: string
             city: string
             state: string
             pincode: string
-            paymentMode: string
+            payment_mode: string
             total: number
             items: { productName: string; productId: string; quantity: number }[]
         }) => {
-            const orderDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
+            const orderDate = new Date(order.created_at).toLocaleDateString("en-IN", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
@@ -60,12 +61,12 @@ export async function GET() {
             const productNames = order.items.map((i) => i.productName).join(" + ")
             const productSkus = order.items.map((i) => i.productId).join("+")
             const totalQty = order.items.reduce((s, i) => s + i.quantity, 0)
-            const codAmount = order.paymentMode === "COD" ? order.total : 0
+            const codAmount = order.payment_mode === "COD" ? order.total : 0
 
             return [
                 order.id,
                 orderDate,
-                csvEscape(order.customerName),
+                csvEscape(order.customer_name),
                 order.phone,
                 order.email,
                 csvEscape(order.address),
@@ -73,7 +74,7 @@ export async function GET() {
                 csvEscape(order.city),
                 csvEscape(order.state),
                 order.pincode,
-                order.paymentMode || "Prepaid",
+                order.payment_mode || "Prepaid",
                 order.total,
                 codAmount,
                 csvEscape(productNames),
@@ -103,7 +104,6 @@ export async function GET() {
 
 function csvEscape(value: string): string {
     if (!value) return ""
-    // Wrap in quotes if contains comma, newline, or quotes
     if (value.includes(",") || value.includes("\n") || value.includes('"')) {
         return `"${value.replace(/"/g, '""')}"`
     }
