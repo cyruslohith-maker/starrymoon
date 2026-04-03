@@ -1,6 +1,5 @@
 import { randomBytes, pbkdf2Sync } from "crypto"
-import { promises as fs } from "fs"
-import path from "path"
+import { supabase } from "@/lib/supabase"
 
 // ─── Types ───────────────────────────────────────
 
@@ -36,10 +35,37 @@ export interface Session {
 // Public user shape (no password/salt)
 export type SafeUser = Omit<User, "passwordHash" | "salt">
 
-// ─── File Paths ──────────────────────────────────
+// ─── Supabase Row Mappers ────────────────────────
+// Map between camelCase (app) and snake_case (Supabase)
 
-const USERS_FILE = path.join(process.cwd(), "data", "users.json")
-const SESSIONS_FILE = path.join(process.cwd(), "data", "sessions.json")
+function rowToUser(row: Record<string, unknown>): User {
+    return {
+        id: row.id as string,
+        name: row.name as string,
+        email: row.email as string,
+        passwordHash: (row.password_hash as string) || "",
+        salt: (row.salt as string) || "",
+        role: (row.role as UserRole) || "customer",
+        phone: (row.phone as string) || "",
+        address: (row.address as string) || "",
+        city: (row.city as string) || "",
+        state: (row.state as string) || "",
+        pincode: (row.pincode as string) || "",
+        createdAt: (row.created_at as string) || new Date().toISOString(),
+        authProvider: (row.auth_provider as AuthProvider) || "email",
+        googleId: (row.google_id as string) || undefined,
+        picture: (row.picture as string) || undefined,
+    }
+}
+
+function rowToSession(row: Record<string, unknown>): Session {
+    return {
+        token: row.token as string,
+        userId: row.user_id as string,
+        createdAt: row.created_at as string,
+        expiresAt: row.expires_at as string,
+    }
+}
 
 // ─── Password Hashing ────────────────────────────
 
@@ -66,32 +92,34 @@ export function generateSessionToken(): string {
 
 // ─── User CRUD ───────────────────────────────────
 
-async function ensureDataDir() {
-    await fs.mkdir(path.dirname(USERS_FILE), { recursive: true })
-}
-
 export async function readUsers(): Promise<User[]> {
-    try {
-        const raw = await fs.readFile(USERS_FILE, "utf-8")
-        return JSON.parse(raw)
-    } catch {
-        return []
-    }
-}
-
-async function writeUsers(users: User[]): Promise<void> {
-    await ensureDataDir()
-    await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2), "utf-8")
+    const { data, error } = await supabase.from("users").select("*")
+    if (error || !data) return []
+    return data.map(rowToUser)
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-    const users = await readUsers()
-    return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) || null
+    const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .ilike("email", email)
+        .limit(1)
+        .single()
+
+    if (error || !data) return null
+    return rowToUser(data)
 }
 
 export async function findUserById(id: string): Promise<User | null> {
-    const users = await readUsers()
-    return users.find((u) => u.id === id) || null
+    const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", id)
+        .limit(1)
+        .single()
+
+    if (error || !data) return null
+    return rowToUser(data)
 }
 
 export async function createUser(data: {
@@ -101,38 +129,52 @@ export async function createUser(data: {
     role?: UserRole
     phone?: string
 }): Promise<SafeUser> {
-    const users = await readUsers()
-
     // Check duplicate email
-    if (users.some((u) => u.email.toLowerCase() === data.email.toLowerCase())) {
+    const existing = await findUserByEmail(data.email)
+    if (existing) {
         throw new Error("Email already registered")
     }
 
     const { hash, salt } = hashPassword(data.password)
-    const newUser: User = {
-        id: "USR-" + Date.now().toString(36).toUpperCase() + randomBytes(3).toString("hex").toUpperCase(),
+    const id = "USR-" + Date.now().toString(36).toUpperCase() + randomBytes(3).toString("hex").toUpperCase()
+
+    const { error } = await supabase.from("users").insert({
+        id,
         name: data.name,
         email: data.email.toLowerCase(),
-        passwordHash: hash,
+        password_hash: hash,
         salt,
         role: data.role || "customer",
         phone: data.phone || "",
-        createdAt: new Date().toISOString(),
-        authProvider: "email",
-    }
+        auth_provider: "email",
+        created_at: new Date().toISOString(),
+    })
 
-    users.push(newUser)
-    await writeUsers(users)
+    if (error) throw new Error(error.message)
 
-    return toSafeUser(newUser)
+    const user = await findUserById(id)
+    if (!user) throw new Error("Failed to create user")
+
+    return toSafeUser(user)
 }
 
 export async function updateUser(id: string, updates: Partial<Omit<User, "id" | "passwordHash" | "salt">>): Promise<void> {
-    const users = await readUsers()
-    const index = users.findIndex((u) => u.id === id)
-    if (index === -1) throw new Error("User not found")
-    users[index] = { ...users[index], ...updates }
-    await writeUsers(users)
+    // Convert camelCase to snake_case for Supabase
+    const dbUpdates: Record<string, unknown> = {}
+    if (updates.name !== undefined) dbUpdates.name = updates.name
+    if (updates.email !== undefined) dbUpdates.email = updates.email
+    if (updates.role !== undefined) dbUpdates.role = updates.role
+    if (updates.phone !== undefined) dbUpdates.phone = updates.phone
+    if (updates.address !== undefined) dbUpdates.address = updates.address
+    if (updates.city !== undefined) dbUpdates.city = updates.city
+    if (updates.state !== undefined) dbUpdates.state = updates.state
+    if (updates.pincode !== undefined) dbUpdates.pincode = updates.pincode
+    if (updates.authProvider !== undefined) dbUpdates.auth_provider = updates.authProvider
+    if (updates.googleId !== undefined) dbUpdates.google_id = updates.googleId
+    if (updates.picture !== undefined) dbUpdates.picture = updates.picture
+
+    const { error } = await supabase.from("users").update(dbUpdates).eq("id", id)
+    if (error) throw new Error(error.message)
 }
 
 export function toSafeUser(user: User): SafeUser {
@@ -149,63 +191,57 @@ export async function findOrCreateGoogleUser(data: {
     googleId: string
     picture?: string
 }): Promise<SafeUser> {
-    const users = await readUsers()
-    const existing = users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())
+    const existing = await findUserByEmail(data.email)
 
     if (existing) {
         // If user exists, update their Google info and return
         if (!existing.googleId) {
-            existing.googleId = data.googleId
-            existing.picture = data.picture
-            existing.authProvider = existing.authProvider || "google"
-            await writeUsers(users)
+            await supabase
+                .from("users")
+                .update({
+                    google_id: data.googleId,
+                    picture: data.picture,
+                    auth_provider: existing.authProvider || "google",
+                })
+                .eq("id", existing.id)
         }
         return toSafeUser(existing)
     }
 
     // Create new Google user (no password needed)
-    const newUser: User = {
-        id: "USR-" + Date.now().toString(36).toUpperCase() + randomBytes(3).toString("hex").toUpperCase(),
+    const id = "USR-" + Date.now().toString(36).toUpperCase() + randomBytes(3).toString("hex").toUpperCase()
+
+    const { error } = await supabase.from("users").insert({
+        id,
         name: data.name,
         email: data.email.toLowerCase(),
-        passwordHash: "",
+        password_hash: "",
         salt: "",
         role: "customer",
-        createdAt: new Date().toISOString(),
-        authProvider: "google",
-        googleId: data.googleId,
+        auth_provider: "google",
+        google_id: data.googleId,
         picture: data.picture,
-    }
+        created_at: new Date().toISOString(),
+    })
 
-    users.push(newUser)
-    await writeUsers(users)
+    if (error) throw new Error(error.message)
 
-    return toSafeUser(newUser)
+    const user = await findUserById(id)
+    if (!user) throw new Error("Failed to create Google user")
+
+    return toSafeUser(user)
 }
 
 // ─── Session CRUD ────────────────────────────────
 
-export async function readSessions(): Promise<Session[]> {
-    try {
-        const raw = await fs.readFile(SESSIONS_FILE, "utf-8")
-        return JSON.parse(raw)
-    } catch {
-        return []
-    }
-}
-
-async function writeSessions(sessions: Session[]): Promise<void> {
-    await ensureDataDir()
-    await fs.writeFile(SESSIONS_FILE, JSON.stringify(sessions, null, 2), "utf-8")
-}
-
 export async function createSession(userId: string): Promise<Session> {
-    const sessions = await readSessions()
-
     // Clean expired sessions
-    const now = new Date()
-    const active = sessions.filter((s) => new Date(s.expiresAt) > now)
+    await supabase
+        .from("sessions")
+        .delete()
+        .lt("expires_at", new Date().toISOString())
 
+    const now = new Date()
     const session: Session = {
         token: generateSessionToken(),
         userId,
@@ -213,8 +249,14 @@ export async function createSession(userId: string): Promise<Session> {
         expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
     }
 
-    active.push(session)
-    await writeSessions(active)
+    const { error } = await supabase.from("sessions").insert({
+        token: session.token,
+        user_id: session.userId,
+        created_at: session.createdAt,
+        expires_at: session.expiresAt,
+    })
+
+    if (error) throw new Error(error.message)
 
     return session
 }
@@ -222,10 +264,16 @@ export async function createSession(userId: string): Promise<Session> {
 export async function getSessionUser(token: string): Promise<SafeUser | null> {
     if (!token) return null
 
-    const sessions = await readSessions()
-    const session = sessions.find((s) => s.token === token)
+    const { data, error } = await supabase
+        .from("sessions")
+        .select("*")
+        .eq("token", token)
+        .limit(1)
+        .single()
 
-    if (!session) return null
+    if (error || !data) return null
+
+    const session = rowToSession(data)
     if (new Date(session.expiresAt) < new Date()) return null
 
     const user = await findUserById(session.userId)
@@ -235,32 +283,32 @@ export async function getSessionUser(token: string): Promise<SafeUser | null> {
 }
 
 export async function deleteSession(token: string): Promise<void> {
-    const sessions = await readSessions()
-    const filtered = sessions.filter((s) => s.token !== token)
-    await writeSessions(filtered)
+    await supabase.from("sessions").delete().eq("token", token)
 }
 
 // ─── Seed Default Owner ──────────────────────────
 
 export async function seedOwnerIfNeeded(): Promise<void> {
-    const users = await readUsers()
-    const hasOwner = users.some((u) => u.role === "owner")
-    if (hasOwner) return
+    const { data } = await supabase
+        .from("users")
+        .select("id")
+        .eq("role", "owner")
+        .limit(1)
+
+    if (data && data.length > 0) return
 
     const { hash, salt } = hashPassword("st4rry2026")
-    const owner: User = {
+
+    await supabase.from("users").insert({
         id: "USR-OWNER001",
         name: "St4rrymoon Owner",
         email: "owner@st4rrymoon.com",
-        passwordHash: hash,
+        password_hash: hash,
         salt,
         role: "owner",
-        createdAt: new Date().toISOString(),
-        authProvider: "email",
-    }
-
-    users.push(owner)
-    await writeUsers(users)
+        auth_provider: "email",
+        created_at: new Date().toISOString(),
+    })
 }
 
 // ─── Role Checks ─────────────────────────────────
