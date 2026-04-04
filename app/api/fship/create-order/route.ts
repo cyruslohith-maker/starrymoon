@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
             })),
         }
 
-        const fshipResponse = await fetch("https://capi.fship.in/api/v1/order/create", {
+        const fshipResponse = await fetch("https://api.fship.in/api/createorder", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
