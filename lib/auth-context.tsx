@@ -23,7 +23,7 @@ interface AuthContextType {
     user: AuthUser | null
     loading: boolean
     login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>
-    googleLogin: (credential: string) => Promise<{ ok: boolean; error?: string }>
+    googleLogin: (credential: string) => Promise<{ ok: boolean; error?: string; user?: AuthUser }>
     register: (data: { name: string; email: string; password: string; phone?: string }) => Promise<{ ok: boolean; error?: string }>
     logout: () => Promise<void>
     refresh: () => Promise<void>
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (res.ok && data.user) {
                 setUser(data.user)
-                return { ok: true }
+                return { ok: true, user: data.user as AuthUser }
             }
             return { ok: false, error: data.error || "Google login failed" }
         } catch {

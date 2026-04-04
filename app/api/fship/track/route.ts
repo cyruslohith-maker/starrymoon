@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        const fshipResponse = await fetch("https://api.fship.in/api/trackorder", {
+        const fshipResponse = await fetch("https://capi.fship.in/api/trackorder", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
