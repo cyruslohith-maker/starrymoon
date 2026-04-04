@@ -26,7 +26,7 @@ const steps = [
 
 export function CustomOrderSection() {
   const whatsappLink = `https://wa.me/?text=${encodeURIComponent(
-    "Hi! I'd like to place a custom jewelry order with St4rrymoon!"
+    "Hi! I'd like to place a custom jewelry order with Starrymoon!"
   )}`
 
   return (

@@ -51,14 +51,14 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.02.22%20%281%29-p2RkRsGEwMqFoSLVEFVzaUpp6WWpyx.jpeg"
-            alt="St4rrymoon mascot"
+            alt="Starrymoon mascot"
             width={40}
             height={40}
             className="rounded-full"
             style={{ width: "40px", height: "auto" }}
           />
           <span className="font-serif text-xl font-bold tracking-tight text-foreground">
-            St4rrymoon
+            Starrymoon
           </span>
         </Link>
 

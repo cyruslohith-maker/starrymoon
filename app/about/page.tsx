@@ -47,13 +47,13 @@ export default function AboutPage() {
 
           <div className="flex flex-1 flex-col items-center text-center md:items-start md:text-left">
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
-              About St4rrymoon
+              About Starrymoon
             </p>
             <h1 className="mb-4 font-serif text-3xl font-bold text-foreground md:text-4xl">
               {"Hi, I'm Pragya!"}
             </h1>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-              I started St4rrymoon from my room with a box of beads and a dream. What began as a fun hobby quickly
+              I started Starrymoon from my room with a box of beads and a dream. What began as a fun hobby quickly
               turned into a passion project when my friends started asking me to make pieces for them too!
             </p>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -72,7 +72,7 @@ export default function AboutPage() {
                 variant="outline"
                 className="rounded-full border-primary/30 text-sm text-secondary-foreground hover:bg-secondary"
               >
-                <a href="https://www.instagram.com/st4rrymoon/" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.instagram.com/starrymoon.in/" target="_blank" rel="noopener noreferrer">
                   <Instagram className="mr-1 h-4 w-4" />
                   Follow
                 </a>
@@ -84,7 +84,7 @@ export default function AboutPage() {
         {/* Highlights */}
         <div className="mb-16">
           <h2 className="mb-8 text-center font-serif text-2xl font-bold text-foreground">
-            Why St4rrymoon?
+            Why Starrymoon?
           </h2>
           <div className="grid gap-6 sm:grid-cols-2">
             {highlights.map((h) => (

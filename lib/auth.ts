@@ -297,12 +297,12 @@ export async function seedOwnerIfNeeded(): Promise<void> {
 
     if (data && data.length > 0) return
 
-    const { hash, salt } = hashPassword("st4rry2026")
+    const { hash, salt } = hashPassword("starrymoon2026")
 
     await supabase.from("users").insert({
         id: "USR-OWNER001",
-        name: "St4rrymoon Owner",
-        email: "owner@st4rrymoon.com",
+        name: "Starrymoon Owner",
+        email: "owner@starrymoon.in.com",
         password_hash: hash,
         salt,
         role: "owner",
@@ -323,4 +323,4 @@ export function isOwner(role: UserRole): boolean {
 
 // ─── Cookie Name ─────────────────────────────────
 
-export const SESSION_COOKIE = "st4rry_session"
+export const SESSION_COOKIE = "starrymoon_session"

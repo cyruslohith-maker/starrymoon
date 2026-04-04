@@ -61,7 +61,7 @@ export default function CarePage() {
             Keep Your Sparkle Shining
           </h1>
           <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground">
-            With a little love and care, your St4rrymoon jewelry will stay beautiful for a long time.
+            With a little love and care, your Starrymoon jewelry will stay beautiful for a long time.
             Here are our best tips.
           </p>
         </div>
@@ -100,7 +100,7 @@ export default function CarePage() {
             Need a repair?
           </h3>
           <p className="text-sm text-muted-foreground">
-            If your piece breaks or the elastic stretches, DM us on Instagram @st4rrymoon.
+            If your piece breaks or the elastic stretches, DM us on Instagram @starrymoon.in.
             We offer free restringing for the first 3 months, and a small fee after that.
           </p>
         </div>

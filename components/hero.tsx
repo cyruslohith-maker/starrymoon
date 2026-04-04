@@ -22,7 +22,7 @@ export function Hero() {
         <div className="mb-6 animate-float">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.02.22%20%281%29-p2RkRsGEwMqFoSLVEFVzaUpp6WWpyx.jpeg"
-            alt="St4rrymoon cute mascot"
+            alt="Starrymoon cute mascot"
             width={100}
             height={100}
             className="rounded-full shadow-lg shadow-primary/30"

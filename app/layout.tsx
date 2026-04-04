@@ -17,9 +17,9 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'St4rrymoon | Handmade Beaded Jewelry',
+  title: 'Starrymoon | Handmade Beaded Jewelry',
   description: 'Handmade beaded bracelets, necklaces, phone charms & more. Cute, aesthetic jewelry for teens. Made with love in India.',
-  keywords: ['handmade jewelry', 'beaded bracelets', 'teen jewelry', 'cute accessories', 'phone charms', 'st4rrymoon'],
+  keywords: ['handmade jewelry', 'beaded bracelets', 'teen jewelry', 'cute accessories', 'phone charms', 'starrymoon'],
   icons: {
     icon: [
       {

@@ -20,7 +20,7 @@ import {
 const faqs = [
   {
     q: "How do I place an order?",
-    a: "You can browse our shop, add items to your cart, and checkout directly on the website. Alternatively, DM us on Instagram @st4rrymoon or message us on WhatsApp to place an order.",
+    a: "You can browse our shop, add items to your cart, and checkout directly on the website. Alternatively, DM us on Instagram @starrymoon.in or message us on WhatsApp to place an order.",
   },
   {
     q: "How long does shipping take?",
@@ -56,8 +56,8 @@ const contactMethods = [
   {
     icon: Instagram,
     title: "Instagram DM",
-    description: "The fastest way to reach us. DM @st4rrymoon for orders, queries, or just to say hi!",
-    href: "https://www.instagram.com/st4rrymoon/",
+    description: "The fastest way to reach us. DM @starrymoon.in for orders, queries, or just to say hi!",
+    href: "https://www.instagram.com/starrymoon.in/",
     label: "Open Instagram",
   },
   {

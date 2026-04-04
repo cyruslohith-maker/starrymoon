@@ -148,7 +148,7 @@ export default function RegisterPage() {
                             </div>
                             <h1 className="font-serif text-xl font-bold text-foreground">Create Account</h1>
                             <p className="text-center text-xs text-muted-foreground">
-                                Join St4rrymoon and track your orders
+                                Join Starrymoon and track your orders
                             </p>
                         </div>
 

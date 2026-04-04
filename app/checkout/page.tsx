@@ -103,7 +103,7 @@ export default function CheckoutPage() {
             <p className="mb-2 text-xs font-bold text-primary">Order ID: {orderId}</p>
           )}
           <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-            Thank you for shopping with St4rrymoon! We will send you order updates via WhatsApp.
+            Thank you for shopping with Starrymoon! We will send you order updates via WhatsApp.
             Your handmade piece will be crafted with extra love and care.
           </p>
 
@@ -111,7 +111,7 @@ export default function CheckoutPage() {
           <div className="mb-8 w-full rounded-2xl border border-border bg-card p-6">
             <Image
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.36.26-Jkj1I7ITjh7uOGKjJCDhTd8QVJqUpD.jpeg"
-              alt="Scan to follow @st4rrymoon on Instagram"
+              alt="Scan to follow @starrymoon.in on Instagram"
               width={200}
               height={240}
               className="mx-auto mb-4 rounded-xl"
@@ -124,9 +124,9 @@ export default function CheckoutPage() {
               asChild
               className="rounded-full bg-primary text-sm text-primary-foreground hover:bg-primary/90"
             >
-              <a href="https://www.instagram.com/st4rrymoon/" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.instagram.com/starrymoon.in/" target="_blank" rel="noopener noreferrer">
                 <Instagram className="mr-2 h-4 w-4" />
-                Follow @st4rrymoon
+                Follow @starrymoon.in
               </a>
             </Button>
           </div>

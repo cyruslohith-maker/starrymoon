@@ -33,7 +33,7 @@ export default function DashboardPage() {
         <div>
             <div className="mb-8">
                 <h1 className="font-serif text-2xl font-bold text-foreground">Dashboard</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Welcome back to St4rrymoon management</p>
+                <p className="mt-1 text-sm text-muted-foreground">Welcome back to Starrymoon management</p>
             </div>
 
             {/* Stats grid */}

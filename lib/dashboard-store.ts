@@ -49,11 +49,11 @@ export interface Order {
 // ─── Storage Keys ────────────────────────────────
 
 const KEYS = {
-    products: "st4rry_products",
-    discounts: "st4rry_discounts",
-    freebies: "st4rry_freebies",
-    orders: "st4rry_orders",
-    pin: "st4rry_dashboard_pin",
+    products: "starrymoon_products",
+    discounts: "starrymoon_discounts",
+    freebies: "starrymoon_freebies",
+    orders: "starrymoon_orders",
+    pin: "starrymoon_dashboard_pin",
 } as const
 
 // ─── Helpers ─────────────────────────────────────

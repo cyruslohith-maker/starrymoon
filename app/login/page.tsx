@@ -144,7 +144,7 @@ export default function LoginPage() {
                             </div>
                             <h1 className="font-serif text-xl font-bold text-foreground">Welcome Back</h1>
                             <p className="text-center text-xs text-muted-foreground">
-                                Sign in to your St4rrymoon account
+                                Sign in to your Starrymoon account
                             </p>
                         </div>
 

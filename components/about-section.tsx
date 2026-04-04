@@ -40,13 +40,13 @@ export function AboutSection() {
           {/* Right: Text */}
           <div className="flex flex-1 flex-col items-center text-center md:items-start md:text-left">
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
-              About St4rrymoon
+              About Starrymoon
             </p>
             <h2 className="font-serif text-3xl font-bold text-foreground md:text-4xl">
               {"Hi, I'm Pragya!"}
             </h2>
             <p className="mt-3 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground">
-              I started St4rrymoon from my room with a box of beads and a dream. 
+              I started Starrymoon from my room with a box of beads and a dream. 
               Every bracelet, necklace, and charm is handcrafted by me with love, care, and a whole lot of pink.
               My mission is to make jewelry that makes you smile every time you look at your wrist.
             </p>

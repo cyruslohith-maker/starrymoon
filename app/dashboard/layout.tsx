@@ -64,7 +64,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <aside className="fixed left-0 top-0 z-40 flex h-full w-56 flex-col border-r border-border bg-card">
                 {/* Header */}
                 <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-                    <span className="font-serif text-sm font-bold text-foreground">St4rrymoon</span>
+                    <span className="font-serif text-sm font-bold text-foreground">Starrymoon</span>
                     <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" />
                 </div>
 

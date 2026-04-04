@@ -12,13 +12,13 @@ export function Footer() {
             <Link href="/" className="mb-3 flex items-center gap-2">
               <Image
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.02.22%20%281%29-p2RkRsGEwMqFoSLVEFVzaUpp6WWpyx.jpeg"
-                alt="St4rrymoon mascot"
+                alt="Starrymoon mascot"
                 width={36}
                 height={36}
                 className="rounded-full"
               />
               <span className="font-serif text-lg font-bold text-foreground">
-                St4rrymoon
+                Starrymoon
               </span>
             </Link>
             <p className="max-w-xs text-center text-xs leading-relaxed text-muted-foreground md:text-left">
@@ -36,7 +36,7 @@ export function Footer() {
                 { label: "Shop", href: "#shop" },
                 { label: "Custom Order", href: "#custom" },
                 { label: "About", href: "#about" },
-                { label: "Instagram", href: "https://www.instagram.com/st4rrymoon/" },
+                { label: "Instagram", href: "https://www.instagram.com/starrymoon.in/" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -57,7 +57,7 @@ export function Footer() {
             </h4>
             <div className="flex gap-3">
               <a
-                href="https://www.instagram.com/st4rrymoon/"
+                href="https://www.instagram.com/starrymoon.in/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
@@ -87,7 +87,7 @@ export function Footer() {
             Made with <Heart className="h-3 w-3 fill-primary text-primary" /> by Pragya
           </p>
           <p className="text-[10px] text-muted-foreground">
-            {"© 2026 St4rrymoon. All rights reserved."}
+            {"© 2026 Starrymoon. All rights reserved."}
           </p>
         </div>
       </div>

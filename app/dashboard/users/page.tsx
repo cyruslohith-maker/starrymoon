@@ -213,7 +213,7 @@ export default function UsersPage() {
                                 <input
                                     type="email" required value={formEmail} onChange={(e) => setFormEmail(e.target.value)}
                                     className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
-                                    placeholder="employee@st4rrymoon.com"
+                                    placeholder="employee@starrymoon.in.com"
                                 />
                             </div>
                             <div>
