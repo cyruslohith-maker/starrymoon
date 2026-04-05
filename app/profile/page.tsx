@@ -7,7 +7,7 @@ import { PageLayout } from "@/components/page-layout"
 import {
     User, Package, Truck, MapPin, Edit3, Save, X, Camera,
     ChevronRight, Clock, CheckCircle2, AlertCircle, Star,
-    Gift, ShoppingBag
+    Gift, ShoppingBag, LogOut
 } from "lucide-react"
 
 /* ─── Types ───────────────────────────────────────── */
@@ -157,7 +157,7 @@ function DiscountMeter({ cartTotal }: { cartTotal: number }) {
 /* ─── Profile Page ────────────────────────────────── */
 
 export default function ProfilePage() {
-    const { user, refresh } = useAuth()
+    const { user, refresh, logout } = useAuth()
     const router = useRouter()
     const [tab, setTab] = useState<"profile" | "orders" | "addresses">("profile")
     const [editing, setEditing] = useState(false)
@@ -352,7 +352,7 @@ export default function ProfilePage() {
                             </span>
                         </div>
 
-                        {/* Edit / Save button */}
+                        {/* Edit / Save / Logout */}
                         <div className="flex gap-2">
                             {editing ? (
                                 <>
@@ -376,13 +376,25 @@ export default function ProfilePage() {
                                     </button>
                                 </>
                             ) : (
-                                <button
-                                    onClick={() => setEditing(true)}
-                                    className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-xs font-bold text-foreground transition-colors hover:bg-muted"
-                                >
-                                    <Edit3 className="h-3.5 w-3.5" />
-                                    Edit
-                                </button>
+                                <>
+                                    <button
+                                        onClick={() => setEditing(true)}
+                                        className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-xs font-bold text-foreground transition-colors hover:bg-muted"
+                                    >
+                                        <Edit3 className="h-3.5 w-3.5" />
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            await logout()
+                                            router.push("/login")
+                                        }}
+                                        className="flex items-center gap-1.5 rounded-xl border border-destructive/30 px-4 py-2 text-xs font-bold text-destructive transition-colors hover:bg-destructive/5"
+                                    >
+                                        <LogOut className="h-3.5 w-3.5" />
+                                        Logout
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
