@@ -121,28 +121,53 @@ export default function ProductsPage() {
         setForm({ ...form, sizes: form.sizes?.filter((x) => x !== s) })
     }
 
-    /* ── Image upload handler ── */
-    const handleImageFile = (file: File) => {
-        if (!file.type.startsWith("image/")) return
-        if (file.size > 5 * 1024 * 1024) {
-            alert("Image must be under 5 MB")
-            return
+    /* ── Image upload handler (multi-image) ── */
+    const handleImageFiles = (files: FileList | File[]) => {
+        const fileArr = Array.from(files).filter((f) => f.type.startsWith("image/"))
+        if (fileArr.length === 0) return
+
+        const oversized = fileArr.filter((f) => f.size > 10 * 1024 * 1024)
+        if (oversized.length > 0) {
+            alert(`${oversized.length} image(s) exceed 10 MB and were skipped`)
         }
+
+        const valid = fileArr.filter((f) => f.size <= 10 * 1024 * 1024)
+        if (valid.length === 0) return
+
         setImageUploading(true)
-        const reader = new FileReader()
-        reader.onload = () => {
-            setForm((prev) => ({ ...prev, image: reader.result as string }))
-            setImageUploading(false)
-        }
-        reader.onerror = () => setImageUploading(false)
-        reader.readAsDataURL(file)
+        let loaded = 0
+
+        valid.forEach((file) => {
+            const reader = new FileReader()
+            reader.onload = () => {
+                const dataUrl = reader.result as string
+                setForm((prev) => {
+                    const imgs = [...(prev.images || []), dataUrl]
+                    return { ...prev, images: imgs, image: prev.image === "/placeholder.svg?height=400&width=400" ? dataUrl : prev.image }
+                })
+                loaded++
+                if (loaded >= valid.length) setImageUploading(false)
+            }
+            reader.onerror = () => {
+                loaded++
+                if (loaded >= valid.length) setImageUploading(false)
+            }
+            reader.readAsDataURL(file)
+        })
+    }
+
+    const removeImage = (idx: number) => {
+        setForm((prev) => {
+            const imgs = (prev.images || []).filter((_, i) => i !== idx)
+            const newPrimary = imgs.length > 0 ? imgs[0] : "/placeholder.svg?height=400&width=400"
+            return { ...prev, images: imgs, image: newPrimary }
+        })
     }
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault()
         setIsDragging(false)
-        const file = e.dataTransfer.files?.[0]
-        if (file) handleImageFile(file)
+        if (e.dataTransfer.files?.length) handleImageFiles(e.dataTransfer.files)
     }
 
     return (
@@ -356,26 +381,38 @@ export default function ProductsPage() {
                                 </div>
                             </div>
 
-                            {/* Image Upload */}
+                            {/* Image Upload (multi-image) */}
                             <div>
-                                <label className="mb-1 block text-xs font-bold text-muted-foreground">
-                                    <ImageIcon className="mr-1 inline h-3 w-3" />
-                                    Product Image
+                                <label className="mb-1 flex items-center justify-between text-xs font-bold text-muted-foreground">
+                                    <span>
+                                        <ImageIcon className="mr-1 inline h-3 w-3" />
+                                        Product Images
+                                    </span>
+                                    <span className="font-normal">
+                                        {(form.images || []).length} uploaded
+                                    </span>
                                 </label>
 
-                                {/* Preview */}
-                                {form.image && form.image !== "/placeholder.svg?height=400&width=400" && (
-                                    <div className="relative mb-3 aspect-square w-32 overflow-hidden rounded-xl border border-border bg-secondary">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={form.image} alt="Preview" className="h-full w-full object-cover" />
-                                        <button
-                                            type="button"
-                                            onClick={() => setForm({ ...form, image: "/placeholder.svg?height=400&width=400" })}
-                                            className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
-                                            aria-label="Remove image"
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </button>
+                                {/* Gallery preview */}
+                                {(form.images || []).length > 0 && (
+                                    <div className="mb-3 flex flex-wrap gap-2">
+                                        {(form.images || []).map((img, idx) => (
+                                            <div key={idx} className="group relative h-20 w-20 overflow-hidden rounded-xl border border-border bg-secondary">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={img} alt={`Image ${idx + 1}`} className="h-full w-full object-cover" />
+                                                {idx === 0 && (
+                                                    <span className="absolute left-1 top-1 rounded bg-primary px-1 py-0.5 text-[8px] font-bold text-primary-foreground">Main</span>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(idx)}
+                                                    className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                                    aria-label={`Remove image ${idx + 1}`}
+                                                >
+                                                    <X className="h-2.5 w-2.5" />
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
 
@@ -385,7 +422,7 @@ export default function ProductsPage() {
                                     onDragLeave={() => setIsDragging(false)}
                                     onDrop={handleDrop}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
+                                    className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed p-5 text-center transition-colors ${
                                         isDragging
                                             ? "border-primary bg-primary/5"
                                             : "border-border hover:border-primary/50 hover:bg-secondary/30"
@@ -398,9 +435,9 @@ export default function ProductsPage() {
                                     )}
                                     <div>
                                         <p className="text-xs font-bold text-foreground">
-                                            {imageUploading ? "Processing..." : "Drag & drop or click to browse"}
+                                            {imageUploading ? "Processing..." : "Drag & drop or click to add images"}
                                         </p>
-                                        <p className="text-[10px] text-muted-foreground">PNG, JPG, WEBP — Max 5 MB</p>
+                                        <p className="text-[10px] text-muted-foreground">PNG, JPG, WEBP — Max 10 MB per image — No limit on count</p>
                                     </div>
                                 </div>
 
@@ -409,10 +446,10 @@ export default function ProductsPage() {
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*"
+                                    multiple
                                     className="hidden"
                                     onChange={(e) => {
-                                        const f = e.target.files?.[0]
-                                        if (f) handleImageFile(f)
+                                        if (e.target.files?.length) handleImageFiles(e.target.files)
                                         e.target.value = ""
                                     }}
                                 />
@@ -423,8 +460,7 @@ export default function ProductsPage() {
                                     capture="environment"
                                     className="hidden"
                                     onChange={(e) => {
-                                        const f = e.target.files?.[0]
-                                        if (f) handleImageFile(f)
+                                        if (e.target.files?.length) handleImageFiles(e.target.files)
                                         e.target.value = ""
                                     }}
                                 />
@@ -456,11 +492,23 @@ export default function ProductsPage() {
                                     </summary>
                                     <input
                                         type="text"
-                                        value={form.image.startsWith("data:") ? "" : form.image}
-                                        onChange={(e) => setForm({ ...form, image: e.target.value })}
-                                        className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-2 text-xs outline-none focus:border-primary"
                                         placeholder="https://example.com/image.jpg"
+                                        className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-2 text-xs outline-none focus:border-primary"
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault()
+                                                const val = (e.target as HTMLInputElement).value.trim()
+                                                if (val) {
+                                                    setForm((prev) => {
+                                                        const imgs = [...(prev.images || []), val]
+                                                        return { ...prev, images: imgs, image: prev.image === "/placeholder.svg?height=400&width=400" ? val : prev.image }
+                                                    });
+                                                    (e.target as HTMLInputElement).value = ""
+                                                }
+                                            }
+                                        }}
                                     />
+                                    <p className="mt-0.5 text-[9px] text-muted-foreground">Press Enter to add</p>
                                 </details>
                             </div>
 
