@@ -49,16 +49,6 @@ export default function LoginPage() {
     const [gsiReady, setGsiReady] = useState(false)
     const googleBtnRef = useRef<HTMLDivElement>(null)
 
-    // If already logged in, redirect
-    if (user) {
-        if (user.role === "owner" || user.role === "employee") {
-            router.push("/dashboard")
-        } else {
-            router.push("/")
-        }
-        return null
-    }
-
     const handleGoogleResponse = useCallback(
         async (response: { credential: string }) => {
             setError("")
@@ -68,11 +58,10 @@ export default function LoginPage() {
             setGoogleLoading(false)
 
             if (result.ok && result.user) {
-                // Redirect owners/employees to dashboard, customers to home
                 if (result.user.role === "owner" || result.user.role === "employee") {
                     router.push("/dashboard")
                 } else {
-                    router.push("/")
+                    router.push("/profile")
                 }
             } else {
                 setError(result.error || "Google sign-in failed")
@@ -81,7 +70,6 @@ export default function LoginPage() {
         [googleLogin, router]
     )
 
-    /* eslint-disable react-hooks/rules-of-hooks */
     useEffect(() => {
         if (!gsiReady) return
 
@@ -93,7 +81,6 @@ export default function LoginPage() {
             callback: handleGoogleResponse,
         })
 
-        // Render the Google button inside our container
         if (googleBtnRef.current) {
             googleBtnRef.current.innerHTML = ""
             window.google.accounts.id.renderButton(googleBtnRef.current, {
@@ -106,7 +93,17 @@ export default function LoginPage() {
             })
         }
     }, [gsiReady, handleGoogleResponse])
-    /* eslint-enable react-hooks/rules-of-hooks */
+
+    // Redirect if already logged in — AFTER all hooks
+    useEffect(() => {
+        if (user) {
+            if (user.role === "owner" || user.role === "employee") {
+                router.push("/dashboard")
+            } else {
+                router.push("/profile")
+            }
+        }
+    }, [user, router])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -117,15 +114,17 @@ export default function LoginPage() {
         setLoading(false)
 
         if (result.ok) {
-            router.push("/")
+            router.push("/profile")
         } else {
             setError(result.error || "Invalid credentials")
         }
     }
 
+    // Show nothing while redirecting
+    if (user) return null
+
     return (
         <PageLayout>
-            {/* Google Identity Services Script */}
             <Script
                 src="https://accounts.google.com/gsi/client"
                 strategy="afterInteractive"
@@ -146,17 +145,15 @@ export default function LoginPage() {
                             </p>
                         </div>
 
-                        {/* Error */}
                         {error && (
                             <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2.5">
                                 <p className="text-xs font-semibold text-destructive">{error}</p>
                             </div>
                         )}
 
-                        {/* ─── Google Sign-In Button (rendered by Google SDK) ─── */}
+                        {/* Google Sign-In */}
                         <div className="mb-5 flex justify-center">
                             <div ref={googleBtnRef} id="google-signin-container">
-                                {/* Google renders the button here */}
                                 {!gsiReady && (
                                     <div className="flex h-[44px] w-full items-center justify-center rounded-full border border-border bg-white text-xs text-muted-foreground">
                                         Loading Google Sign-In...
@@ -171,22 +168,15 @@ export default function LoginPage() {
                             </p>
                         )}
 
-                        {/* ─── OR Divider ─── */}
                         <div className="relative mb-5 flex items-center" role="separator">
                             <div className="flex-1 border-t border-border" />
-                            <span className="mx-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                                or
-                            </span>
+                            <span className="mx-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">or</span>
                             <div className="flex-1 border-t border-border" />
                         </div>
 
-                        {/* ─── Email / Password Form ─── */}
                         <form onSubmit={handleSubmit}>
-                            {/* Email */}
                             <div className="mb-4">
-                                <label htmlFor="login-email" className="mb-1 block text-xs font-bold text-muted-foreground">
-                                    Email
-                                </label>
+                                <label htmlFor="login-email" className="mb-1 block text-xs font-bold text-muted-foreground">Email</label>
                                 <input
                                     id="login-email"
                                     type="email"
@@ -198,11 +188,8 @@ export default function LoginPage() {
                                 />
                             </div>
 
-                            {/* Password */}
                             <div className="mb-6">
-                                <label htmlFor="login-password" className="mb-1 block text-xs font-bold text-muted-foreground">
-                                    Password
-                                </label>
+                                <label htmlFor="login-password" className="mb-1 block text-xs font-bold text-muted-foreground">Password</label>
                                 <div className="relative">
                                     <input
                                         id="login-password"
@@ -225,7 +212,6 @@ export default function LoginPage() {
                                 </div>
                             </div>
 
-                            {/* Submit */}
                             <button
                                 type="submit"
                                 id="email-signin-btn"
@@ -236,14 +222,10 @@ export default function LoginPage() {
                             </button>
                         </form>
 
-                        {/* Register link */}
                         <div className="mt-5 text-center">
                             <p className="text-xs text-muted-foreground">
                                 Don&apos;t have an account?{" "}
-                                <Link
-                                    href="/register"
-                                    className="inline-flex items-center gap-1 font-bold text-primary hover:underline"
-                                >
+                                <Link href="/register" className="inline-flex items-center gap-1 font-bold text-primary hover:underline">
                                     Create one <ArrowRight className="h-3 w-3" />
                                 </Link>
                             </p>

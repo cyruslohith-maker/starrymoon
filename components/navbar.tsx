@@ -16,9 +16,11 @@ import {
   Info,
   HeadphonesIcon,
   ChevronDown,
+  UserCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-context"
+import { useAuth } from "@/lib/auth-context"
 
 const shopCategories = [
   { label: "All Products", href: "/shop" },
@@ -43,6 +45,7 @@ export function Navbar() {
   const [shopOpen, setShopOpen] = useState(false)
   const pathname = usePathname()
   const { itemCount, openCart } = useCart()
+  const { user } = useAuth()
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/90 backdrop-blur-lg">
@@ -125,6 +128,19 @@ export function Navbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-1">
+          {/* Profile / Login */}
+          <Link
+            href={user ? "/profile" : "/login"}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-primary"
+            aria-label={user ? "My profile" : "Sign in"}
+          >
+            {user?.picture ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={user.picture} alt={user.name} className="h-6 w-6 rounded-full object-cover" />
+            ) : (
+              <UserCircle className="h-5 w-5" />
+            )}
+          </Link>
           <Button
             variant="ghost"
             size="icon"

@@ -52,12 +52,6 @@ export default function RegisterPage() {
     const [gsiReady, setGsiReady] = useState(false)
     const googleBtnRef = useRef<HTMLDivElement>(null)
 
-    // If already logged in, redirect
-    if (user) {
-        router.push("/")
-        return null
-    }
-
     const handleGoogleResponse = useCallback(
         async (response: { credential: string }) => {
             setError("")
@@ -70,7 +64,7 @@ export default function RegisterPage() {
                 if (result.user.role === "owner" || result.user.role === "employee") {
                     router.push("/dashboard")
                 } else {
-                    router.push("/")
+                    router.push("/profile")
                 }
             } else {
                 setError(result.error || "Google sign-up failed")
@@ -79,7 +73,6 @@ export default function RegisterPage() {
         [googleLogin, router]
     )
 
-    /* eslint-disable react-hooks/rules-of-hooks */
     useEffect(() => {
         if (!gsiReady) return
 
@@ -91,7 +84,6 @@ export default function RegisterPage() {
             callback: handleGoogleResponse,
         })
 
-        // Render the Google button inside our container
         if (googleBtnRef.current) {
             googleBtnRef.current.innerHTML = ""
             window.google.accounts.id.renderButton(googleBtnRef.current, {
@@ -104,7 +96,13 @@ export default function RegisterPage() {
             })
         }
     }, [gsiReady, handleGoogleResponse])
-    /* eslint-enable react-hooks/rules-of-hooks */
+
+    // Redirect if already logged in — AFTER all hooks
+    useEffect(() => {
+        if (user) {
+            router.push("/")
+        }
+    }, [user, router])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -120,15 +118,16 @@ export default function RegisterPage() {
         setLoading(false)
 
         if (result.ok) {
-            router.push("/")
+            router.push("/profile")
         } else {
             setError(result.error || "Registration failed")
         }
     }
 
+    if (user) return null
+
     return (
         <PageLayout>
-            {/* Google Identity Services Script */}
             <Script
                 src="https://accounts.google.com/gsi/client"
                 strategy="afterInteractive"
@@ -138,7 +137,6 @@ export default function RegisterPage() {
             <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
                 <div className="w-full max-w-sm">
                     <div className="rounded-2xl border border-border bg-card p-8 shadow-xl">
-                        {/* Header */}
                         <div className="mb-6 flex flex-col items-center gap-3">
                             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                                 <UserPlus className="h-7 w-7 text-primary" />
@@ -149,14 +147,13 @@ export default function RegisterPage() {
                             </p>
                         </div>
 
-                        {/* Error */}
                         {error && (
                             <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2.5">
                                 <p className="text-xs font-semibold text-destructive">{error}</p>
                             </div>
                         )}
 
-                        {/* ─── Google Sign-Up Button (rendered by Google SDK) ─── */}
+                        {/* Google Sign-Up */}
                         <div className="mb-5 flex justify-center">
                             <div ref={googleBtnRef} id="google-signup-container">
                                 {!gsiReady && (
@@ -173,127 +170,48 @@ export default function RegisterPage() {
                             </p>
                         )}
 
-                        {/* ─── OR Divider ─── */}
                         <div className="relative mb-5 flex items-center" role="separator">
                             <div className="flex-1 border-t border-border" />
-                            <span className="mx-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                                or
-                            </span>
+                            <span className="mx-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">or</span>
                             <div className="flex-1 border-t border-border" />
                         </div>
 
-                        {/* ─── Email / Password Form ─── */}
                         <form onSubmit={handleSubmit}>
-                            {/* Name */}
                             <div className="mb-3">
-                                <label htmlFor="reg-name" className="mb-1 block text-xs font-bold text-muted-foreground">
-                                    Full Name
-                                </label>
-                                <input
-                                    id="reg-name"
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Your name"
-                                    required
-                                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
-                                />
+                                <label htmlFor="reg-name" className="mb-1 block text-xs font-bold text-muted-foreground">Full Name</label>
+                                <input id="reg-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary" />
                             </div>
-
-                            {/* Email */}
                             <div className="mb-3">
-                                <label htmlFor="reg-email" className="mb-1 block text-xs font-bold text-muted-foreground">
-                                    Email
-                                </label>
-                                <input
-                                    id="reg-email"
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="you@example.com"
-                                    required
-                                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
-                                />
+                                <label htmlFor="reg-email" className="mb-1 block text-xs font-bold text-muted-foreground">Email</label>
+                                <input id="reg-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary" />
                             </div>
-
-                            {/* Phone */}
                             <div className="mb-3">
-                                <label htmlFor="reg-phone" className="mb-1 block text-xs font-bold text-muted-foreground">
-                                    Phone (for order updates)
-                                </label>
-                                <input
-                                    id="reg-phone"
-                                    type="tel"
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    placeholder="+91 XXXXX XXXXX"
-                                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
-                                />
+                                <label htmlFor="reg-phone" className="mb-1 block text-xs font-bold text-muted-foreground">Phone (for order updates)</label>
+                                <input id="reg-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary" />
                             </div>
-
-                            {/* Password */}
                             <div className="mb-3">
-                                <label htmlFor="reg-password" className="mb-1 block text-xs font-bold text-muted-foreground">
-                                    Password
-                                </label>
+                                <label htmlFor="reg-password" className="mb-1 block text-xs font-bold text-muted-foreground">Password</label>
                                 <div className="relative">
-                                    <input
-                                        id="reg-password"
-                                        type={showPassword ? "text" : "password"}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Min. 6 characters"
-                                        required
-                                        minLength={6}
-                                        className="w-full rounded-xl border border-border bg-background px-4 py-3 pr-10 text-sm outline-none transition-colors focus:border-primary"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                        aria-label={showPassword ? "Hide password" : "Show password"}
-                                    >
+                                    <input id="reg-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 6 characters" required minLength={6} className="w-full rounded-xl border border-border bg-background px-4 py-3 pr-10 text-sm outline-none transition-colors focus:border-primary" />
+                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Hide password" : "Show password"}>
                                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
                                 </div>
                             </div>
-
-                            {/* Confirm Password */}
                             <div className="mb-6">
-                                <label htmlFor="reg-confirm" className="mb-1 block text-xs font-bold text-muted-foreground">
-                                    Confirm Password
-                                </label>
-                                <input
-                                    id="reg-confirm"
-                                    type={showPassword ? "text" : "password"}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Repeat password"
-                                    required
-                                    minLength={6}
-                                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
-                                />
+                                <label htmlFor="reg-confirm" className="mb-1 block text-xs font-bold text-muted-foreground">Confirm Password</label>
+                                <input id="reg-confirm" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat password" required minLength={6} className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary" />
                             </div>
 
-                            {/* Submit */}
-                            <button
-                                type="submit"
-                                id="email-signup-btn"
-                                disabled={loading}
-                                className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-                            >
+                            <button type="submit" id="email-signup-btn" disabled={loading} className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50">
                                 {loading ? "Creating account..." : "Create Account"}
                             </button>
                         </form>
 
-                        {/* Login link */}
                         <div className="mt-5 text-center">
                             <p className="text-xs text-muted-foreground">
                                 Already have an account?{" "}
-                                <Link
-                                    href="/login"
-                                    className="inline-flex items-center gap-1 font-bold text-primary hover:underline"
-                                >
+                                <Link href="/login" className="inline-flex items-center gap-1 font-bold text-primary hover:underline">
                                     Sign in <ArrowRight className="h-3 w-3" />
                                 </Link>
                             </p>

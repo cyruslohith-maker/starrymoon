@@ -17,6 +17,9 @@ export interface AuthUser {
     state?: string
     pincode?: string
     createdAt: string
+    picture?: string
+    authProvider?: string
+    googleId?: string
 }
 
 interface AuthContextType {
