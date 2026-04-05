@@ -1,5 +1,5 @@
 import { randomBytes, pbkdf2Sync } from "crypto"
-import { supabase } from "@/lib/supabase"
+import { getSupabase } from "@/lib/supabase"
 
 // ─── Types ───────────────────────────────────────
 
@@ -93,13 +93,13 @@ export function generateSessionToken(): string {
 // ─── User CRUD ───────────────────────────────────
 
 export async function readUsers(): Promise<User[]> {
-    const { data, error } = await supabase.from("users").select("*")
+    const { data, error } = await getSupabase().from("users").select("*")
     if (error || !data) return []
     return data.map(rowToUser)
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
         .from("users")
         .select("*")
         .ilike("email", email)
@@ -111,7 +111,7 @@ export async function findUserByEmail(email: string): Promise<User | null> {
 }
 
 export async function findUserById(id: string): Promise<User | null> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
         .from("users")
         .select("*")
         .eq("id", id)
@@ -138,7 +138,7 @@ export async function createUser(data: {
     const { hash, salt } = hashPassword(data.password)
     const id = "USR-" + Date.now().toString(36).toUpperCase() + randomBytes(3).toString("hex").toUpperCase()
 
-    const { error } = await supabase.from("users").insert({
+    const { error } = await getSupabase().from("users").insert({
         id,
         name: data.name,
         email: data.email.toLowerCase(),
@@ -173,7 +173,7 @@ export async function updateUser(id: string, updates: Partial<Omit<User, "id" | 
     if (updates.googleId !== undefined) dbUpdates.google_id = updates.googleId
     if (updates.picture !== undefined) dbUpdates.picture = updates.picture
 
-    const { error } = await supabase.from("users").update(dbUpdates).eq("id", id)
+    const { error } = await getSupabase().from("users").update(dbUpdates).eq("id", id)
     if (error) throw new Error(error.message)
 }
 
@@ -196,7 +196,7 @@ export async function findOrCreateGoogleUser(data: {
     if (existing) {
         // If user exists, update their Google info and return
         if (!existing.googleId) {
-            await supabase
+            await getSupabase()
                 .from("users")
                 .update({
                     google_id: data.googleId,
@@ -211,7 +211,7 @@ export async function findOrCreateGoogleUser(data: {
     // Create new Google user (no password needed)
     const id = "USR-" + Date.now().toString(36).toUpperCase() + randomBytes(3).toString("hex").toUpperCase()
 
-    const { error } = await supabase.from("users").insert({
+    const { error } = await getSupabase().from("users").insert({
         id,
         name: data.name,
         email: data.email.toLowerCase(),
@@ -236,7 +236,7 @@ export async function findOrCreateGoogleUser(data: {
 
 export async function createSession(userId: string): Promise<Session> {
     // Clean expired sessions
-    await supabase
+    await getSupabase()
         .from("sessions")
         .delete()
         .lt("expires_at", new Date().toISOString())
@@ -249,7 +249,7 @@ export async function createSession(userId: string): Promise<Session> {
         expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
     }
 
-    const { error } = await supabase.from("sessions").insert({
+    const { error } = await getSupabase().from("sessions").insert({
         token: session.token,
         user_id: session.userId,
         created_at: session.createdAt,
@@ -264,7 +264,7 @@ export async function createSession(userId: string): Promise<Session> {
 export async function getSessionUser(token: string): Promise<SafeUser | null> {
     if (!token) return null
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
         .from("sessions")
         .select("*")
         .eq("token", token)
@@ -283,13 +283,13 @@ export async function getSessionUser(token: string): Promise<SafeUser | null> {
 }
 
 export async function deleteSession(token: string): Promise<void> {
-    await supabase.from("sessions").delete().eq("token", token)
+    await getSupabase().from("sessions").delete().eq("token", token)
 }
 
 // ─── Seed Default Owner ──────────────────────────
 
 export async function seedOwnerIfNeeded(): Promise<void> {
-    const { data } = await supabase
+    const { data } = await getSupabase()
         .from("users")
         .select("id")
         .eq("role", "owner")
@@ -299,7 +299,7 @@ export async function seedOwnerIfNeeded(): Promise<void> {
 
     const { hash, salt } = hashPassword("starrymoon2026")
 
-    await supabase.from("users").insert({
+    await getSupabase().from("users").insert({
         id: "USR-OWNER001",
         name: "Starrymoon Owner",
         email: "owner@starrymoon.in.com",

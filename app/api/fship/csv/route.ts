@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { getSupabase } from "@/lib/supabase"
 
 /**
  * GET /api/fship/csv — Generate Fship-compatible CSV from stored orders
@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase"
  */
 export async function GET() {
     try {
-        const { data: orders, error } = await supabase
+        const { data: orders, error } = await getSupabase()
             .from("orders")
             .select("*")
             .order("created_at", { ascending: false })

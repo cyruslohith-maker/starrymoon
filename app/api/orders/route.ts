@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { getSupabase } from "@/lib/supabase"
 
 /**
  * GET /api/orders — return all stored orders
  */
 export async function GET() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
             .from("orders")
             .select("*")
             .order("created_at", { ascending: false })
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
         const id = "ORD-" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase()
 
-        const { error } = await supabase.from("orders").insert({
+        const { error } = await getSupabase().from("orders").insert({
             id,
             customer_name: customerName || "",
             email: email || "",
@@ -127,7 +127,7 @@ export async function PATCH(req: NextRequest) {
         if (updates.awbNumber !== undefined) dbUpdates.awb_number = updates.awbNumber
         if (updates.fshipPushed !== undefined) dbUpdates.fship_pushed = updates.fshipPushed
 
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
             .from("orders")
             .update(dbUpdates)
             .eq("id", id)
