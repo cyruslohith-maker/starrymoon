@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { useCart } from "@/lib/cart-context"
+import { useAuth } from "@/lib/auth-context"
 
 const FREE_GIFT_THRESHOLD = 499
 
@@ -22,6 +23,7 @@ export function CartSidebar() {
     isCartOpen,
     closeCart,
   } = useCart()
+  const { user } = useAuth()
 
   if (!isCartOpen) return null
 
@@ -191,8 +193,8 @@ export function CartSidebar() {
               asChild
               className="w-full rounded-full bg-primary py-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90"
             >
-              <Link href="/checkout" onClick={closeCart}>
-                Proceed to Checkout
+              <Link href={user ? "/checkout" : "/login?redirect=checkout"} onClick={closeCart}>
+                {user ? "Proceed to Checkout" : "Sign in to Checkout"}
               </Link>
             </Button>
             <p className="mt-2 text-center text-[10px] text-muted-foreground">

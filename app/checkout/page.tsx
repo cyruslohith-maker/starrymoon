@@ -1,369 +1,544 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { PageLayout } from "@/components/page-layout"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useCart } from "@/lib/cart-context"
+import { useAuth } from "@/lib/auth-context"
 import {
-  Check,
-  ArrowLeft,
-  ArrowRight,
-  Instagram,
-  ShoppingBag,
-  User,
-  MapPin,
-  CreditCard,
-  PartyPopper,
+    Check,
+    ArrowLeft,
+    ArrowRight,
+    Instagram,
+    ShoppingBag,
+    MapPin,
+    CreditCard,
+    PartyPopper,
+    Loader2,
+    AlertCircle,
 } from "lucide-react"
 
-const steps = [
-  { id: 1, label: "Contact", icon: User },
-  { id: 2, label: "Shipping", icon: MapPin },
-  { id: 3, label: "Payment", icon: CreditCard },
-]
+/* ─── Pincode → City/State auto-detect ────────────── */
+
+async function lookupPincode(pin: string): Promise<{ city: string; state: string } | null> {
+    try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`)
+        const data = await res.json()
+        if (data?.[0]?.Status === "Success" && data[0].PostOffice?.length > 0) {
+            const po = data[0].PostOffice[0]
+            return { city: po.District || po.Division, state: po.State }
+        }
+    } catch { /* ignore */ }
+    return null
+}
+
+/* ─── Component ───────────────────────────────────── */
 
 export default function CheckoutPage() {
-  const { items, subtotal, specialRequest, clearCart } = useCart()
-  const [currentStep, setCurrentStep] = useState(1)
-  const [orderPlaced, setOrderPlaced] = useState(false)
-  const [orderId, setOrderId] = useState("")
-  const [isPlacing, setIsPlacing] = useState(false)
-  const [placeError, setPlaceError] = useState("")
+    const { items, subtotal, specialRequest, clearCart } = useCart()
+    const { user } = useAuth()
+    const router = useRouter()
 
-  // Form state
-  const [contact, setContact] = useState({ name: "", email: "", phone: "", whatsapp: "" })
-  const [shipping, setShipping] = useState({ address: "", city: "", state: "", pincode: "" })
+    const [orderPlaced, setOrderPlaced] = useState(false)
+    const [orderId, setOrderId] = useState("")
+    const [isPlacing, setIsPlacing] = useState(false)
+    const [placeError, setPlaceError] = useState("")
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
-  const shippingCost = subtotal >= 499 ? 0 : 49
-  const total = subtotal + shippingCost
+    // ─── Form fields ───
+    const [name, setName] = useState("")
+    const [phone, setPhone] = useState("")
+    const [gender, setGender] = useState("")
+    const [age, setAge] = useState("")
 
-  const handlePlaceOrder = async () => {
-    setIsPlacing(true)
-    setPlaceError("")
-    try {
-      const orderPayload = {
-        customerName: contact.name,
-        email: contact.email,
-        phone: contact.phone,
-        whatsapp: contact.whatsapp,
-        address: shipping.address,
-        city: shipping.city,
-        state: shipping.state,
-        pincode: shipping.pincode,
-        items: items.map((i) => ({
-          productId: i.product.id,
-          productName: i.product.name,
-          quantity: i.quantity,
-          price: i.product.price,
-          size: i.size,
-        })),
-        subtotal,
-        shippingCost,
-        total,
-        specialRequest,
-        paymentMode: "Prepaid",
-      }
+    const [houseNo, setHouseNo] = useState("")
+    const [floor, setFloor] = useState("")
+    const [addressLine1, setAddressLine1] = useState("")
+    const [addressLine2, setAddressLine2] = useState("")
+    const [pincode, setPincode] = useState("")
+    const [city, setCity] = useState("")
+    const [state, setState] = useState("")
+    const [pincodeLoading, setPincodeLoading] = useState(false)
+    const [pincodeError, setPincodeError] = useState("")
 
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload),
-      })
+    const shippingCost = subtotal >= 499 ? 0 : 49
+    const total = subtotal + shippingCost
 
-      const data = await res.json()
-      if (res.ok && data.order) {
-        setOrderId(data.order.id)
-        setOrderPlaced(true)
-        clearCart()
-      } else {
-        setPlaceError(data.error || "Failed to place order. Please try again.")
-      }
-    } catch {
-      setPlaceError("Network error. Please check your connection and try again.")
-    } finally {
-      setIsPlacing(false)
+    // Redirect to login if not signed in
+    useEffect(() => {
+        if (user === null) {
+            const t = setTimeout(() => {
+                if (!user) router.push("/login?redirect=checkout")
+            }, 1500)
+            return () => clearTimeout(t)
+        }
+    }, [user, router])
+
+    // Pre-fill from user profile
+    useEffect(() => {
+        if (user) {
+            setName(user.name || "")
+            setPhone(user.phone?.replace("+91", "").replace(/\s/g, "") || "")
+        }
+    }, [user])
+
+    // Auto-detect city/state from pincode
+    const handlePincodeChange = useCallback(async (val: string) => {
+        const clean = val.replace(/\D/g, "").slice(0, 6)
+        setPincode(clean)
+        setPincodeError("")
+        setCity("")
+        setState("")
+
+        if (clean.length === 6) {
+            setPincodeLoading(true)
+            const result = await lookupPincode(clean)
+            setPincodeLoading(false)
+            if (result) {
+                setCity(result.city)
+                setState(result.state)
+            } else {
+                setPincodeError("Could not find this pincode. Please enter city/state manually.")
+            }
+        }
+    }, [])
+
+    // Validation
+    const validate = (): boolean => {
+        const errs: Record<string, string> = {}
+        if (!name.trim()) errs.name = "Name is required"
+        if (!phone.trim() || phone.replace(/\D/g, "").length !== 10) errs.phone = "Enter a valid 10-digit number"
+        if (!gender) errs.gender = "Please select gender"
+        if (!houseNo.trim()) errs.houseNo = "House/Building number is required"
+        if (!addressLine1.trim()) errs.addressLine1 = "Address line 1 is required"
+        if (!pincode || pincode.length !== 6) errs.pincode = "Enter a valid 6-digit pincode"
+        if (!city.trim()) errs.city = "City is required"
+        if (!state.trim()) errs.state = "State is required"
+        setValidationErrors(errs)
+        return Object.keys(errs).length === 0
     }
-  }
 
-  if (orderPlaced) {
-    return (
-      <PageLayout>
-        <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-16 text-center lg:py-24">
-          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
-            <PartyPopper className="h-10 w-10 text-primary" />
-          </div>
-          <h1 className="mb-3 font-serif text-3xl font-bold text-foreground">
-            Order Placed!
-          </h1>
-          {orderId && (
-            <p className="mb-2 text-xs font-bold text-primary">Order ID: {orderId}</p>
-          )}
-          <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-            Thank you for shopping with Starrymoon! We will send you order updates via WhatsApp.
-            Your handmade piece will be crafted with extra love and care.
-          </p>
+    const handlePlaceOrder = async () => {
+        if (!validate()) return
+        setIsPlacing(true)
+        setPlaceError("")
 
-          {/* Instagram follow CTA */}
-          <div className="mb-8 w-full rounded-2xl border border-border bg-card p-6">
-            <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.36.26-Jkj1I7ITjh7uOGKjJCDhTd8QVJqUpD.jpeg"
-              alt="Scan to follow @starrymoon.in on Instagram"
-              width={200}
-              height={240}
-              className="mx-auto mb-4 rounded-xl"
-              style={{ width: "200px", height: "auto" }}
-            />
-            <p className="mb-3 text-sm font-bold text-card-foreground">
-              Follow us for order updates, new drops, and giveaways!
-            </p>
-            <Button
-              asChild
-              className="rounded-full bg-primary text-sm text-primary-foreground hover:bg-primary/90"
-            >
-              <a href="https://www.instagram.com/starrymoon.in/" target="_blank" rel="noopener noreferrer">
-                <Instagram className="mr-2 h-4 w-4" />
-                Follow @starrymoon.in
-              </a>
-            </Button>
-          </div>
+        const fullAddress = [houseNo, floor ? `Floor ${floor}` : "", addressLine1, addressLine2]
+            .filter(Boolean).join(", ")
 
-          <Button asChild variant="outline" className="rounded-full border-primary/30 text-secondary-foreground hover:bg-secondary">
-            <Link href="/shop">
-              Continue Shopping
-            </Link>
-          </Button>
-        </div>
-      </PageLayout>
-    )
-  }
+        try {
+            const orderPayload = {
+                customerName: name,
+                email: user?.email || "",
+                phone: `+91${phone.replace(/\D/g, "")}`,
+                whatsapp: `+91${phone.replace(/\D/g, "")}`,
+                address: fullAddress,
+                city,
+                state,
+                pincode,
+                gender,
+                age: age || undefined,
+                items: items.map((i) => ({
+                    productId: i.product.id,
+                    productName: i.product.name,
+                    quantity: i.quantity,
+                    price: i.product.price,
+                    size: i.size,
+                })),
+                subtotal,
+                shippingCost,
+                total,
+                specialRequest,
+                paymentMode: "Prepaid",
+            }
 
-  if (items.length === 0) {
-    return (
-      <PageLayout>
-        <div className="flex flex-col items-center justify-center gap-4 py-32 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
-            <ShoppingBag className="h-7 w-7 text-primary" />
-          </div>
-          <p className="text-lg font-bold text-foreground">Your cart is empty</p>
-          <Button asChild className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/shop">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Start Shopping
-            </Link>
-          </Button>
-        </div>
-      </PageLayout>
-    )
-  }
+            const res = await fetch("/api/orders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(orderPayload),
+            })
 
-  return (
-    <PageLayout>
-      <div className="mx-auto max-w-5xl px-4 py-8 lg:px-8 lg:py-12">
-        <h1 className="mb-8 text-center font-serif text-3xl font-bold text-foreground">
-          Checkout
-        </h1>
+            const data = await res.json()
+            if (res.ok && data.order) {
+                setOrderId(data.order.id)
+                setOrderPlaced(true)
+                clearCart()
+            } else {
+                setPlaceError(data.error || "Failed to place order. Please try again.")
+            }
+        } catch {
+            setPlaceError("Network error. Please check your connection and try again.")
+        } finally {
+            setIsPlacing(false)
+        }
+    }
 
-        {/* Steps indicator */}
-        <div className="mb-10 flex items-center justify-center gap-2">
-          {steps.map((step, i) => (
-            <div key={step.id} className="flex items-center gap-2">
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-colors ${currentStep > step.id
-                  ? "bg-primary text-primary-foreground"
-                  : currentStep === step.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground"
-                  }`}
-              >
-                {currentStep > step.id ? <Check className="h-4 w-4" /> : step.id}
-              </div>
-              <span
-                className={`hidden text-xs font-semibold sm:block ${currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
-                  }`}
-              >
-                {step.label}
-              </span>
-              {i < steps.length - 1 && (
-                <div
-                  className={`mx-2 h-px w-8 sm:w-12 ${currentStep > step.id ? "bg-primary" : "bg-border"
-                    }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Form area */}
-          <div className="flex-1 rounded-2xl border border-border bg-card p-6">
-            {/* Step 1: Contact */}
-            {currentStep === 1 && (
-              <div>
-                <h2 className="mb-4 text-lg font-bold text-card-foreground">Contact Information</h2>
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <Label htmlFor="name" className="text-xs font-bold text-muted-foreground">Full Name</Label>
-                    <Input id="name" value={contact.name} onChange={(e) => setContact({ ...contact, name: e.target.value })} placeholder="Your full name" className="mt-1 rounded-xl border-border" />
-                  </div>
-                  <div>
-                    <Label htmlFor="email" className="text-xs font-bold text-muted-foreground">Email</Label>
-                    <Input id="email" type="email" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} placeholder="you@example.com" className="mt-1 rounded-xl border-border" />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone" className="text-xs font-bold text-muted-foreground">Phone Number</Label>
-                    <Input id="phone" type="tel" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" className="mt-1 rounded-xl border-border" />
-                  </div>
-                  <div>
-                    <Label htmlFor="whatsapp" className="text-xs font-bold text-muted-foreground">WhatsApp Number (for order updates)</Label>
-                    <Input id="whatsapp" type="tel" value={contact.whatsapp} onChange={(e) => setContact({ ...contact, whatsapp: e.target.value })} placeholder="+91 XXXXX XXXXX" className="mt-1 rounded-xl border-border" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Shipping */}
-            {currentStep === 2 && (
-              <div>
-                <h2 className="mb-4 text-lg font-bold text-card-foreground">Shipping Address</h2>
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <Label htmlFor="address" className="text-xs font-bold text-muted-foreground">Full Address</Label>
-                    <Input id="address" value={shipping.address} onChange={(e) => setShipping({ ...shipping, address: e.target.value })} placeholder="House/Apt No, Street, Locality" className="mt-1 rounded-xl border-border" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city" className="text-xs font-bold text-muted-foreground">City</Label>
-                      <Input id="city" value={shipping.city} onChange={(e) => setShipping({ ...shipping, city: e.target.value })} className="mt-1 rounded-xl border-border" />
+    /* ─── Order Placed Screen ─── */
+    if (orderPlaced) {
+        return (
+            <PageLayout>
+                <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-16 text-center lg:py-24">
+                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
+                        <PartyPopper className="h-10 w-10 text-primary" />
                     </div>
-                    <div>
-                      <Label htmlFor="state" className="text-xs font-bold text-muted-foreground">State</Label>
-                      <Input id="state" value={shipping.state} onChange={(e) => setShipping({ ...shipping, state: e.target.value })} className="mt-1 rounded-xl border-border" />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="pincode" className="text-xs font-bold text-muted-foreground">Pincode</Label>
-                    <Input id="pincode" value={shipping.pincode} onChange={(e) => setShipping({ ...shipping, pincode: e.target.value })} placeholder="XXXXXX" className="mt-1 rounded-xl border-border" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Payment */}
-            {currentStep === 3 && (
-              <div>
-                <h2 className="mb-4 text-lg font-bold text-card-foreground">Payment</h2>
-                <div className="flex flex-col gap-4">
-                  <div className="rounded-xl border border-primary/30 bg-secondary/50 p-4">
-                    <p className="text-sm font-bold text-card-foreground">Cash on Delivery</p>
-                    <p className="text-xs text-muted-foreground">Pay when you receive your order. No advance payment needed.</p>
-                  </div>
-                  <div className="rounded-xl border border-border bg-secondary/30 p-4">
-                    <p className="text-sm font-bold text-card-foreground">UPI / Online Payment</p>
-                    <p className="text-xs text-muted-foreground">
-                      After placing the order, you will receive payment details via WhatsApp.
+                    <h1 className="mb-3 font-serif text-3xl font-bold text-foreground">Order Placed!</h1>
+                    {orderId && <p className="mb-2 text-xs font-bold text-primary">Order ID: {orderId}</p>}
+                    <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
+                        Thank you for shopping with Starrymoon! We will send you order updates via WhatsApp.
+                        Your handmade piece will be crafted with extra love and care.
                     </p>
-                  </div>
+                    <div className="mb-8 w-full rounded-2xl border border-border bg-card p-6">
+                        <Image
+                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.36.26-Jkj1I7ITjh7uOGKjJCDhTd8QVJqUpD.jpeg"
+                            alt="Scan to follow @starrymoon.in on Instagram"
+                            width={200}
+                            height={240}
+                            className="mx-auto mb-4 rounded-xl"
+                            style={{ width: "200px", height: "auto" }}
+                        />
+                        <p className="mb-3 text-sm font-bold text-card-foreground">
+                            Follow us for order updates, new drops, and giveaways!
+                        </p>
+                        <Button asChild className="rounded-full bg-primary text-sm text-primary-foreground hover:bg-primary/90">
+                            <a href="https://www.instagram.com/starrymoon.in/" target="_blank" rel="noopener noreferrer">
+                                <Instagram className="mr-2 h-4 w-4" />
+                                Follow @starrymoon.in
+                            </a>
+                        </Button>
+                    </div>
+                    <Button asChild variant="outline" className="rounded-full border-primary/30 text-secondary-foreground hover:bg-secondary">
+                        <Link href="/shop">Continue Shopping</Link>
+                    </Button>
                 </div>
-              </div>
+            </PageLayout>
+        )
+    }
+
+    /* ─── Empty Cart ─── */
+    if (items.length === 0) {
+        return (
+            <PageLayout>
+                <div className="flex flex-col items-center justify-center gap-4 py-32 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
+                        <ShoppingBag className="h-7 w-7 text-primary" />
+                    </div>
+                    <p className="text-lg font-bold text-foreground">Your cart is empty</p>
+                    <Button asChild className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                        <Link href="/shop">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Start Shopping
+                        </Link>
+                    </Button>
+                </div>
+            </PageLayout>
+        )
+    }
+
+    /* ─── Loading auth ─── */
+    if (!user) {
+        return (
+            <PageLayout>
+                <div className="flex min-h-[60vh] items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+            </PageLayout>
+        )
+    }
+
+    /* ─── Helper: field wrapper ─── */
+    const Field = ({ id, label, required, error, children }: {
+        id: string; label: string; required?: boolean; error?: string
+        children: React.ReactNode
+    }) => (
+        <div>
+            <label htmlFor={id} className="mb-1 block text-xs font-bold text-muted-foreground">
+                {label} {required && <span className="text-destructive">*</span>}
+            </label>
+            {children}
+            {error && (
+                <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-destructive">
+                    <AlertCircle className="h-3 w-3" /> {error}
+                </p>
             )}
-
-            {/* Navigation buttons */}
-            <div className="mt-6 flex items-center justify-between">
-              {currentStep > 1 ? (
-                <Button
-                  variant="outline"
-                  className="rounded-full border-primary/30 text-sm text-secondary-foreground hover:bg-secondary"
-                  onClick={() => setCurrentStep(currentStep - 1)}
-                >
-                  <ArrowLeft className="mr-1 h-4 w-4" />
-                  Back
-                </Button>
-              ) : (
-                <Button asChild variant="outline" className="rounded-full border-primary/30 text-sm text-secondary-foreground hover:bg-secondary">
-                  <Link href="/shop">
-                    <ArrowLeft className="mr-1 h-4 w-4" />
-                    Back to Shop
-                  </Link>
-                </Button>
-              )}
-
-              {currentStep < 3 ? (
-                <Button
-                  className="rounded-full bg-primary text-sm text-primary-foreground hover:bg-primary/90"
-                  onClick={() => setCurrentStep(currentStep + 1)}
-                >
-                  Next
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    className="rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90"
-                    onClick={handlePlaceOrder}
-                    disabled={isPlacing}
-                  >
-                    {isPlacing ? "Placing Order..." : "Place Order"}
-                  </Button>
-                  {placeError && (
-                    <p className="mt-2 text-xs font-semibold text-destructive">{placeError}</p>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Order summary sidebar */}
-          <div className="w-full lg:w-80">
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <h3 className="mb-4 text-sm font-bold text-card-foreground">Order Summary</h3>
-              <ul className="mb-4 flex flex-col gap-3">
-                {items.map((item) => (
-                  <li key={item.product.id} className="flex items-center gap-3">
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-secondary">
-                      <Image src={item.product.image} alt={item.product.name} fill className="object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-card-foreground">{item.product.name}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Qty: {item.quantity} | Size: {item.size}
-                      </p>
-                    </div>
-                    <span className="text-xs font-bold text-foreground">
-                      {"\u20B9"}{item.product.price * item.quantity}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {specialRequest && (
-                <div className="mb-4 rounded-lg bg-secondary/50 p-3">
-                  <p className="text-[10px] font-bold text-muted-foreground">Special Request:</p>
-                  <p className="text-xs text-card-foreground">{specialRequest}</p>
-                </div>
-              )}
-
-              <div className="flex flex-col gap-1.5 border-t border-border pt-3 text-xs">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span>{"\u20B9"}{subtotal}</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Shipping</span>
-                  <span>{shippingCost === 0 ? "FREE" : `\u20B9${shippingCost}`}</span>
-                </div>
-                <div className="flex justify-between border-t border-border pt-2 text-sm font-bold text-foreground">
-                  <span>Total</span>
-                  <span>{"\u20B9"}{total}</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
-    </PageLayout>
-  )
+    )
+
+    const inputCls = "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
+    const errCls = "border-destructive"
+
+    return (
+        <PageLayout>
+            <div className="mx-auto max-w-5xl px-4 py-8 lg:px-8 lg:py-12">
+                <h1 className="mb-2 text-center font-serif text-3xl font-bold text-foreground">Checkout</h1>
+                <p className="mb-8 text-center text-xs text-muted-foreground">
+                    Shipping across India 🇮🇳 • Free shipping on orders ₹499+
+                </p>
+
+                <div className="flex flex-col gap-8 lg:flex-row">
+                    {/* ─── Form ─── */}
+                    <div className="flex-1 space-y-6">
+
+                        {/* Personal Details */}
+                        <div className="rounded-2xl border border-border bg-card p-6">
+                            <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-card-foreground">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                Personal Details
+                            </h2>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <Field id="co-name" label="Full Name" required error={validationErrors.name}>
+                                    <input
+                                        id="co-name"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        placeholder="Your full name"
+                                        className={`${inputCls} ${validationErrors.name ? errCls : ""}`}
+                                    />
+                                </Field>
+
+                                <Field id="co-phone" label="Phone Number" required error={validationErrors.phone}>
+                                    <div className="flex">
+                                        <span className="flex items-center rounded-l-xl border border-r-0 border-border bg-muted px-3 text-sm font-semibold text-muted-foreground">
+                                            +91
+                                        </span>
+                                        <input
+                                            id="co-phone"
+                                            type="tel"
+                                            maxLength={10}
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                                            placeholder="XXXXX XXXXX"
+                                            className={`flex-1 rounded-r-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary ${validationErrors.phone ? errCls : ""}`}
+                                        />
+                                    </div>
+                                </Field>
+
+                                <Field id="co-gender" label="Gender" required error={validationErrors.gender}>
+                                    <select
+                                        id="co-gender"
+                                        value={gender}
+                                        onChange={(e) => setGender(e.target.value)}
+                                        className={`${inputCls} ${validationErrors.gender ? errCls : ""} ${!gender ? "text-muted-foreground" : ""}`}
+                                    >
+                                        <option value="">Select gender</option>
+                                        <option value="female">Female</option>
+                                        <option value="male">Male</option>
+                                        <option value="non-binary">Non-binary</option>
+                                        <option value="prefer-not">Prefer not to say</option>
+                                    </select>
+                                </Field>
+
+                                <Field id="co-age" label="Age (optional)">
+                                    <input
+                                        id="co-age"
+                                        type="number"
+                                        min={1}
+                                        max={120}
+                                        value={age}
+                                        onChange={(e) => setAge(e.target.value)}
+                                        placeholder="Optional"
+                                        className={inputCls}
+                                    />
+                                </Field>
+                            </div>
+                        </div>
+
+                        {/* Shipping Address */}
+                        <div className="rounded-2xl border border-border bg-card p-6">
+                            <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-card-foreground">
+                                <CreditCard className="h-4 w-4 text-primary" />
+                                Shipping Address
+                            </h2>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <Field id="co-house" label="House No. / Building No." required error={validationErrors.houseNo}>
+                                    <input
+                                        id="co-house"
+                                        value={houseNo}
+                                        onChange={(e) => setHouseNo(e.target.value)}
+                                        placeholder="e.g. 42-B, Sky Villa"
+                                        className={`${inputCls} ${validationErrors.houseNo ? errCls : ""}`}
+                                    />
+                                </Field>
+
+                                <Field id="co-floor" label="Floor Number">
+                                    <input
+                                        id="co-floor"
+                                        value={floor}
+                                        onChange={(e) => setFloor(e.target.value)}
+                                        placeholder="e.g. 3rd Floor"
+                                        className={inputCls}
+                                    />
+                                </Field>
+
+                                <div className="sm:col-span-2">
+                                    <Field id="co-addr1" label="Address Line 1" required error={validationErrors.addressLine1}>
+                                        <input
+                                            id="co-addr1"
+                                            value={addressLine1}
+                                            onChange={(e) => setAddressLine1(e.target.value)}
+                                            placeholder="Street, Locality, Area"
+                                            className={`${inputCls} ${validationErrors.addressLine1 ? errCls : ""}`}
+                                        />
+                                    </Field>
+                                </div>
+
+                                <div className="sm:col-span-2">
+                                    <Field id="co-addr2" label="Address Line 2">
+                                        <input
+                                            id="co-addr2"
+                                            value={addressLine2}
+                                            onChange={(e) => setAddressLine2(e.target.value)}
+                                            placeholder="Landmark, Near, Opposite (optional)"
+                                            className={inputCls}
+                                        />
+                                    </Field>
+                                </div>
+
+                                <Field id="co-pincode" label="Pincode" required error={validationErrors.pincode || pincodeError}>
+                                    <div className="relative">
+                                        <input
+                                            id="co-pincode"
+                                            type="text"
+                                            maxLength={6}
+                                            value={pincode}
+                                            onChange={(e) => handlePincodeChange(e.target.value)}
+                                            placeholder="6-digit pincode"
+                                            className={`${inputCls} ${validationErrors.pincode || pincodeError ? errCls : ""}`}
+                                        />
+                                        {pincodeLoading && (
+                                            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-primary" />
+                                        )}
+                                    </div>
+                                </Field>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Field id="co-city" label="City" required error={validationErrors.city}>
+                                        <input
+                                            id="co-city"
+                                            value={city}
+                                            onChange={(e) => setCity(e.target.value)}
+                                            placeholder="Auto-detected"
+                                            readOnly={!!city && !pincodeError}
+                                            className={`${inputCls} ${city && !pincodeError ? "bg-muted" : ""} ${validationErrors.city ? errCls : ""}`}
+                                        />
+                                    </Field>
+
+                                    <Field id="co-state" label="State" required error={validationErrors.state}>
+                                        <input
+                                            id="co-state"
+                                            value={state}
+                                            onChange={(e) => setState(e.target.value)}
+                                            placeholder="Auto-detected"
+                                            readOnly={!!state && !pincodeError}
+                                            className={`${inputCls} ${state && !pincodeError ? "bg-muted" : ""} ${validationErrors.state ? errCls : ""}`}
+                                        />
+                                    </Field>
+                                </div>
+                            </div>
+
+                            {city && state && (
+                                <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+                                    <Check className="h-3.5 w-3.5" />
+                                    {city}, {state} — Delivery available ✓
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Payment */}
+                        <div className="rounded-2xl border border-border bg-card p-6">
+                            <h2 className="mb-4 text-base font-bold text-card-foreground">Payment</h2>
+                            <div className="flex flex-col gap-3">
+                                <div className="rounded-xl border border-primary/30 bg-secondary/50 p-4">
+                                    <p className="text-sm font-bold text-card-foreground">Cash on Delivery</p>
+                                    <p className="text-xs text-muted-foreground">Pay when you receive your order.</p>
+                                </div>
+                                <div className="rounded-xl border border-border bg-secondary/30 p-4">
+                                    <p className="text-sm font-bold text-card-foreground">UPI / Online Payment</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        After placing the order, you will receive payment details via WhatsApp.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-between">
+                            <Button asChild variant="outline" className="rounded-full border-primary/30 text-sm text-secondary-foreground hover:bg-secondary">
+                                <Link href="/shop">
+                                    <ArrowLeft className="mr-1 h-4 w-4" />
+                                    Back to Shop
+                                </Link>
+                            </Button>
+
+                            <div className="text-right">
+                                <Button
+                                    className="rounded-full bg-primary px-8 py-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90"
+                                    onClick={handlePlaceOrder}
+                                    disabled={isPlacing}
+                                >
+                                    {isPlacing ? (
+                                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Placing Order...</>
+                                    ) : (
+                                        <>Place Order — ₹{total} <ArrowRight className="ml-2 h-4 w-4" /></>
+                                    )}
+                                </Button>
+                                {placeError && (
+                                    <p className="mt-2 text-xs font-semibold text-destructive">{placeError}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ─── Order Summary ─── */}
+                    <div className="w-full lg:sticky lg:top-24 lg:w-80 lg:self-start">
+                        <div className="rounded-2xl border border-border bg-card p-5">
+                            <h3 className="mb-4 text-sm font-bold text-card-foreground">Order Summary</h3>
+                            <ul className="mb-4 flex flex-col gap-3">
+                                {items.map((item) => (
+                                    <li key={item.product.id} className="flex items-center gap-3">
+                                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                                            <Image src={item.product.image} alt={item.product.name} fill className="object-cover" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold text-card-foreground">{item.product.name}</p>
+                                            <p className="text-[10px] text-muted-foreground">
+                                                Qty: {item.quantity} | Size: {item.size}
+                                            </p>
+                                        </div>
+                                        <span className="text-xs font-bold text-foreground">
+                                            ₹{item.product.price * item.quantity}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+
+                            {specialRequest && (
+                                <div className="mb-4 rounded-lg bg-secondary/50 p-3">
+                                    <p className="text-[10px] font-bold text-muted-foreground">Special Request:</p>
+                                    <p className="text-xs text-card-foreground">{specialRequest}</p>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col gap-1.5 border-t border-border pt-3 text-xs">
+                                <div className="flex justify-between text-muted-foreground">
+                                    <span>Subtotal</span>
+                                    <span>₹{subtotal}</span>
+                                </div>
+                                <div className="flex justify-between text-muted-foreground">
+                                    <span>Shipping</span>
+                                    <span>{shippingCost === 0 ? "FREE" : `₹${shippingCost}`}</span>
+                                </div>
+                                <div className="flex justify-between border-t border-border pt-2 text-sm font-bold text-foreground">
+                                    <span>Total</span>
+                                    <span>₹{total}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </PageLayout>
+    )
 }

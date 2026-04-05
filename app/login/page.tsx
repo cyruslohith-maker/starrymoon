@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, Suspense } from "react"
 import Link from "next/link"
 import Script from "next/script"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { PageLayout } from "@/components/page-layout"
 import { Lock, ArrowRight, Eye, EyeOff } from "lucide-react"
@@ -37,9 +37,11 @@ declare global {
     }
 }
 
-export default function LoginPage() {
+function LoginPageInner() {
     const { login, googleLogin, user } = useAuth()
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const redirectTo = searchParams.get("redirect")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
@@ -58,11 +60,9 @@ export default function LoginPage() {
             setGoogleLoading(false)
 
             if (result.ok && result.user) {
-                if (result.user.role === "owner" || result.user.role === "employee") {
-                    router.push("/dashboard")
-                } else {
-                    router.push("/profile")
-                }
+                const dest = redirectTo ? `/${redirectTo}` : 
+                    (result.user.role === "owner" || result.user.role === "employee") ? "/dashboard" : "/profile"
+                router.push(dest)
             } else {
                 setError(result.error || "Google sign-in failed")
             }
@@ -97,13 +97,11 @@ export default function LoginPage() {
     // Redirect if already logged in — AFTER all hooks
     useEffect(() => {
         if (user) {
-            if (user.role === "owner" || user.role === "employee") {
-                router.push("/dashboard")
-            } else {
-                router.push("/profile")
-            }
+            const dest = redirectTo ? `/${redirectTo}` :
+                (user.role === "owner" || user.role === "employee") ? "/dashboard" : "/profile"
+            router.push(dest)
         }
-    }, [user, router])
+    }, [user, router, redirectTo])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -114,7 +112,7 @@ export default function LoginPage() {
         setLoading(false)
 
         if (result.ok) {
-            router.push("/profile")
+            router.push(redirectTo ? `/${redirectTo}` : "/profile")
         } else {
             setError(result.error || "Invalid credentials")
         }
@@ -234,5 +232,13 @@ export default function LoginPage() {
                 </div>
             </div>
         </PageLayout>
+    )
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense>
+            <LoginPageInner />
+        </Suspense>
     )
 }
