@@ -1,6 +1,13 @@
 import { randomBytes, pbkdf2Sync } from "crypto"
 import { getSupabase } from "@/lib/supabase"
 
+// ─── Owner Emails (auto-assigned owner role on sign-in) ───
+const OWNER_EMAILS = [
+    "cyruslohith@gmail.com",
+    "pragyajmamgai@gmail.com",
+    "pragyajamamgai@gmail.com",
+]
+
 // ─── Types ───────────────────────────────────────
 
 export type UserRole = "owner" | "employee" | "customer" | "guest"
@@ -195,18 +202,27 @@ export async function findOrCreateGoogleUser(data: {
 
     if (existing) {
         // If user exists, update their Google info and return
+        const updates: Record<string, string> = {}
         if (!existing.googleId) {
+            updates.google_id = data.googleId
+            updates.auth_provider = existing.authProvider || "google"
+        }
+        if (data.picture) updates.picture = data.picture
+        // Auto-promote to owner if email is in the owner list
+        if (OWNER_EMAILS.includes(data.email.toLowerCase()) && existing.role !== "owner") {
+            updates.role = "owner"
+        }
+        if (Object.keys(updates).length > 0) {
             await getSupabase()
                 .from("users")
-                .update({
-                    google_id: data.googleId,
-                    picture: data.picture,
-                    auth_provider: existing.authProvider || "google",
-                })
+                .update(updates)
                 .eq("id", existing.id)
         }
         return toSafeUser(existing)
     }
+
+    // Determine role — auto-assign owner for known emails
+    const role = OWNER_EMAILS.includes(data.email.toLowerCase()) ? "owner" : "customer"
 
     // Create new Google user (no password needed)
     const id = "USR-" + Date.now().toString(36).toUpperCase() + randomBytes(3).toString("hex").toUpperCase()
@@ -217,7 +233,7 @@ export async function findOrCreateGoogleUser(data: {
         email: data.email.toLowerCase(),
         password_hash: "",
         salt: "",
-        role: "customer",
+        role,
         auth_provider: "google",
         google_id: data.googleId,
         picture: data.picture,
