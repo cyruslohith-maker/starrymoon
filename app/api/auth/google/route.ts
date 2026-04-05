@@ -16,18 +16,27 @@ export async function POST(req: NextRequest) {
         }
 
         // Decode the JWT payload (Google ID tokens are JWTs — header.payload.signature)
-        // We decode the payload to extract user info. Full signature verification
-        // should be done via Google's tokeninfo endpoint in production.
         const parts = credential.split(".")
         if (parts.length !== 3) {
             return NextResponse.json({ error: "Invalid credential format" }, { status: 400 })
         }
 
-        const payload = JSON.parse(
-            Buffer.from(parts[1], "base64url").toString("utf-8")
-        )
+        let payload: Record<string, unknown>
+        try {
+            payload = JSON.parse(
+                Buffer.from(parts[1], "base64url").toString("utf-8")
+            )
+        } catch (decodeErr) {
+            console.error("JWT decode error:", decodeErr)
+            return NextResponse.json({ error: "Failed to decode Google token" }, { status: 400 })
+        }
 
-        const { sub: googleId, email, name, picture } = payload
+        const { sub: googleId, email, name, picture } = payload as {
+            sub: string
+            email: string
+            name: string
+            picture: string
+        }
 
         if (!email || !googleId) {
             return NextResponse.json({ error: "Invalid Google token payload" }, { status: 400 })
@@ -36,25 +45,44 @@ export async function POST(req: NextRequest) {
         // Verify the token audience matches our client ID
         const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
         if (clientId && payload.aud !== clientId) {
+            console.error("Token aud mismatch:", payload.aud, "vs", clientId)
             return NextResponse.json({ error: "Token audience mismatch" }, { status: 401 })
         }
 
         // Verify the token hasn't expired
         const now = Math.floor(Date.now() / 1000)
-        if (payload.exp && payload.exp < now) {
+        if (payload.exp && (payload.exp as number) < now) {
             return NextResponse.json({ error: "Token expired" }, { status: 401 })
         }
 
         // Find or create the user
-        const user = await findOrCreateGoogleUser({
-            email,
-            name: name || email.split("@")[0],
-            googleId,
-            picture,
-        })
+        let user
+        try {
+            user = await findOrCreateGoogleUser({
+                email: email as string,
+                name: (name as string) || (email as string).split("@")[0],
+                googleId: googleId as string,
+                picture: picture as string,
+            })
+        } catch (userErr) {
+            console.error("findOrCreateGoogleUser error:", userErr)
+            return NextResponse.json(
+                { error: "Failed to create or find user: " + (userErr instanceof Error ? userErr.message : String(userErr)) },
+                { status: 500 }
+            )
+        }
 
         // Create session
-        const session = await createSession(user.id)
+        let session
+        try {
+            session = await createSession(user.id)
+        } catch (sessionErr) {
+            console.error("createSession error:", sessionErr)
+            return NextResponse.json(
+                { error: "Failed to create session: " + (sessionErr instanceof Error ? sessionErr.message : String(sessionErr)) },
+                { status: 500 }
+            )
+        }
 
         // Set HTTP-only cookie (same pattern as email login)
         const response = NextResponse.json({ user }, { status: 200 })
@@ -69,6 +97,9 @@ export async function POST(req: NextRequest) {
         return response
     } catch (error) {
         console.error("Google auth error:", error)
-        return NextResponse.json({ error: "Google authentication failed" }, { status: 500 })
+        return NextResponse.json(
+            { error: "Google authentication failed: " + (error instanceof Error ? error.message : String(error)) },
+            { status: 500 }
+        )
     }
 }
