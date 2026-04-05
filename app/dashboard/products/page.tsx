@@ -211,7 +211,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Product grid */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
                 {filtered.map((p) => (
                     <div
                         key={p.id}
@@ -302,8 +302,8 @@ export default function ProductsPage() {
 
             {/* Add/Edit modal */}
             {showForm && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-16 backdrop-blur-sm">
-                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-2 pt-4 backdrop-blur-sm sm:p-4 sm:pt-16">
+                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-4 shadow-2xl sm:p-6">
                         <div className="mb-5 flex items-center justify-between">
                             <h2 className="font-serif text-lg font-bold text-foreground">
                                 {editingId ? "Edit Product" : "Add Product"}

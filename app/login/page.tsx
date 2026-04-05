@@ -129,9 +129,9 @@ function LoginPageInner() {
                 onLoad={() => setGsiReady(true)}
             />
 
-            <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
+            <div className="flex min-h-[60vh] items-center justify-center px-4 py-8 sm:min-h-[70vh] sm:py-12">
                 <div className="w-full max-w-sm">
-                    <div className="rounded-2xl border border-border bg-card p-8 shadow-xl">
+                    <div className="rounded-2xl border border-border bg-card p-6 shadow-xl sm:p-8">
                         {/* Header */}
                         <div className="mb-6 flex flex-col items-center gap-3">
                             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">

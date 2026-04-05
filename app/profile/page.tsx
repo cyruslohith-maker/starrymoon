@@ -296,18 +296,18 @@ export default function ProfilePage() {
 
     return (
         <PageLayout>
-            <div className="mx-auto max-w-3xl px-4 py-8">
+            <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
                 {/* ─── Header Card ─── */}
-                <div className="relative mb-6 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-card to-pink-50/50 p-6 shadow-lg">
-                    <div className="flex items-center gap-5">
+                <div className="relative mb-5 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-card to-pink-50/50 p-4 shadow-lg sm:mb-6 sm:p-6">
+                    <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-5">
                         {/* Avatar */}
-                        <div className="relative">
-                            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-primary/10 shadow-lg">
+                        <div className="relative shrink-0">
+                            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-primary/10 shadow-lg sm:h-20 sm:w-20">
                                 {formPicture ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img src={formPicture} alt={user.name} className="h-full w-full object-cover" />
                                 ) : (
-                                    <User className="h-9 w-9 text-primary" />
+                                    <User className="h-7 w-7 text-primary sm:h-9 sm:w-9" />
                                 )}
                             </div>
                             {editing && (
@@ -325,18 +325,18 @@ export default function ProfilePage() {
                         </div>
 
                         {/* Info */}
-                        <div className="flex-1">
+                        <div className="flex-1 text-center sm:text-left">
                             {editing ? (
                                 <input
                                     value={formName}
                                     onChange={(e) => setFormName(e.target.value)}
-                                    className="mb-1 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-lg font-bold outline-none focus:border-primary"
+                                    className="mb-1 w-full rounded-lg border border-border bg-background px-3 py-1.5 text-base font-bold outline-none focus:border-primary sm:text-lg"
                                     placeholder="Your name"
                                 />
                             ) : (
-                                <h1 className="text-lg font-bold text-foreground">{user.name}</h1>
+                                <h1 className="text-base font-bold text-foreground sm:text-lg">{user.name}</h1>
                             )}
-                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                            <p className="text-[11px] text-muted-foreground sm:text-xs">{user.email}</p>
                             {editing ? (
                                 <input
                                     value={formPhone}
@@ -345,7 +345,7 @@ export default function ProfilePage() {
                                     placeholder="+91 XXXXX XXXXX"
                                 />
                             ) : (
-                                user.phone && <p className="mt-0.5 text-xs text-muted-foreground">{user.phone}</p>
+                                user.phone && <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-xs">{user.phone}</p>
                             )}
                             <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                                 {user.role}
@@ -353,7 +353,7 @@ export default function ProfilePage() {
                         </div>
 
                         {/* Edit / Save / Logout */}
-                        <div className="flex gap-2">
+                        <div className="flex w-full justify-center gap-2 sm:w-auto">
                             {editing ? (
                                 <>
                                     <button
@@ -406,19 +406,20 @@ export default function ProfilePage() {
                 </div>
 
                 {/* ─── Tabs ─── */}
-                <div className="mb-6 flex gap-1 rounded-xl bg-muted p-1">
+                <div className="mb-5 flex gap-1 rounded-xl bg-muted p-1 sm:mb-6">
                     {tabs.map((t) => (
                         <button
                             key={t.id}
                             onClick={() => setTab(t.id)}
-                            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-bold transition-all ${
+                            className={`flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-2.5 text-[11px] font-bold transition-all sm:gap-1.5 sm:px-3 sm:text-xs ${
                                 tab === t.id
                                     ? "bg-card text-foreground shadow-sm"
                                     : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
                             <t.icon className="h-3.5 w-3.5" />
-                            {t.label}
+                            <span className="hidden xs:inline sm:inline">{t.label}</span>
+                            <span className="xs:hidden sm:hidden">{t.id === "profile" ? "Profile" : t.id === "orders" ? "Orders" : "Address"}</span>
                         </button>
                     ))}
                 </div>
@@ -431,23 +432,23 @@ export default function ProfilePage() {
                         <div className="rounded-2xl border border-border bg-card p-5">
                             <h3 className="mb-4 text-sm font-bold text-foreground">Account Details</h3>
                             <div className="grid gap-3 text-xs">
-                                <div className="flex justify-between border-b border-border pb-2">
+                                <div className="flex flex-col gap-0.5 border-b border-border pb-2 sm:flex-row sm:justify-between">
                                     <span className="font-semibold text-muted-foreground">Name</span>
                                     <span className="font-bold text-foreground">{user.name}</span>
                                 </div>
-                                <div className="flex justify-between border-b border-border pb-2">
+                                <div className="flex flex-col gap-0.5 border-b border-border pb-2 sm:flex-row sm:justify-between">
                                     <span className="font-semibold text-muted-foreground">Email</span>
-                                    <span className="font-bold text-foreground">{user.email}</span>
+                                    <span className="truncate font-bold text-foreground">{user.email}</span>
                                 </div>
-                                <div className="flex justify-between border-b border-border pb-2">
+                                <div className="flex flex-col gap-0.5 border-b border-border pb-2 sm:flex-row sm:justify-between">
                                     <span className="font-semibold text-muted-foreground">Phone</span>
                                     <span className="font-bold text-foreground">{user.phone || "Not set"}</span>
                                 </div>
-                                <div className="flex justify-between border-b border-border pb-2">
+                                <div className="flex flex-col gap-0.5 border-b border-border pb-2 sm:flex-row sm:justify-between">
                                     <span className="font-semibold text-muted-foreground">Sign-in method</span>
                                     <span className="font-bold capitalize text-foreground">{user.authProvider || "email"}</span>
                                 </div>
-                                <div className="flex justify-between">
+                                <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between">
                                     <span className="font-semibold text-muted-foreground">Member since</span>
                                     <span className="font-bold text-foreground">
                                         {new Date(user.createdAt).toLocaleDateString("en-IN", {
@@ -462,7 +463,7 @@ export default function ProfilePage() {
 
                         <div className="rounded-2xl border border-border bg-card p-5">
                             <h3 className="mb-3 text-sm font-bold text-foreground">Quick Stats</h3>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3">
                                 <div className="rounded-xl bg-primary/5 p-3 text-center">
                                     <ShoppingBag className="mx-auto mb-1 h-5 w-5 text-primary" />
                                     <div className="text-lg font-bold text-foreground">{orders.length}</div>
@@ -612,7 +613,7 @@ export default function ProfilePage() {
                                     placeholder="Full address line"
                                     className="rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
                                 />
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                                     <input
                                         value={addrForm.city}
                                         onChange={(e) => setAddrForm({ ...addrForm, city: e.target.value })}

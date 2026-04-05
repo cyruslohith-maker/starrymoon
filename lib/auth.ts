@@ -5,7 +5,6 @@ import { getSupabase } from "@/lib/supabase"
 const OWNER_EMAILS = [
     "cyruslohith@gmail.com",
     "pragyajmamgai@gmail.com",
-    "pragyajamamgai@gmail.com",
 ]
 
 // ─── Types ───────────────────────────────────────

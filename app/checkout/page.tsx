@@ -180,17 +180,17 @@ export default function CheckoutPage() {
     if (orderPlaced) {
         return (
             <PageLayout>
-                <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-16 text-center lg:py-24">
-                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
-                        <PartyPopper className="h-10 w-10 text-primary" />
+                <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-10 text-center sm:py-16 lg:py-24">
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary sm:mb-6 sm:h-20 sm:w-20">
+                        <PartyPopper className="h-8 w-8 text-primary sm:h-10 sm:w-10" />
                     </div>
-                    <h1 className="mb-3 font-serif text-3xl font-bold text-foreground">Order Placed!</h1>
+                    <h1 className="mb-3 font-serif text-2xl font-bold text-foreground sm:text-3xl">Order Placed!</h1>
                     {orderId && <p className="mb-2 text-xs font-bold text-primary">Order ID: {orderId}</p>}
-                    <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
+                    <p className="mb-5 text-xs leading-relaxed text-muted-foreground sm:mb-6 sm:text-sm">
                         Thank you for shopping with Starrymoon! We will send you order updates via WhatsApp.
                         Your handmade piece will be crafted with extra love and care.
                     </p>
-                    <div className="mb-8 w-full rounded-2xl border border-border bg-card p-6">
+                    <div className="mb-6 w-full rounded-2xl border border-border bg-card p-4 sm:mb-8 sm:p-6">
                         <Image
                             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.36.26-Jkj1I7ITjh7uOGKjJCDhTd8QVJqUpD.jpeg"
                             alt="Scan to follow @starrymoon.in on Instagram"
@@ -221,7 +221,7 @@ export default function CheckoutPage() {
     if (items.length === 0) {
         return (
             <PageLayout>
-                <div className="flex flex-col items-center justify-center gap-4 py-32 text-center">
+                <div className="flex flex-col items-center justify-center gap-4 px-4 py-20 text-center sm:py-32">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
                         <ShoppingBag className="h-7 w-7 text-primary" />
                     </div>
@@ -271,18 +271,18 @@ export default function CheckoutPage() {
 
     return (
         <PageLayout>
-            <div className="mx-auto max-w-5xl px-4 py-8 lg:px-8 lg:py-12">
-                <h1 className="mb-2 text-center font-serif text-3xl font-bold text-foreground">Checkout</h1>
-                <p className="mb-8 text-center text-xs text-muted-foreground">
+            <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8 lg:px-8 lg:py-12">
+                <h1 className="mb-2 text-center font-serif text-2xl font-bold text-foreground sm:text-3xl">Checkout</h1>
+                <p className="mb-6 text-center text-[11px] text-muted-foreground sm:mb-8 sm:text-xs">
                     Shipping across India 🇮🇳 • Free shipping on orders ₹499+
                 </p>
 
-                <div className="flex flex-col gap-8 lg:flex-row">
+                <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
                     {/* ─── Form ─── */}
-                    <div className="flex-1 space-y-6">
+                    <div className="flex-1 space-y-5 sm:space-y-6">
 
                         {/* Personal Details */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
+                        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
                             <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-card-foreground">
                                 <MapPin className="h-4 w-4 text-primary" />
                                 Personal Details
@@ -346,7 +346,7 @@ export default function CheckoutPage() {
                         </div>
 
                         {/* Shipping Address */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
+                        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
                             <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-card-foreground">
                                 <CreditCard className="h-4 w-4 text-primary" />
                                 Shipping Address
@@ -447,7 +447,7 @@ export default function CheckoutPage() {
                         </div>
 
                         {/* Payment */}
-                        <div className="rounded-2xl border border-border bg-card p-6">
+                        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
                             <h2 className="mb-4 text-base font-bold text-card-foreground">Payment</h2>
                             <div className="flex flex-col gap-3">
                                 <div className="rounded-xl border border-primary/30 bg-secondary/50 p-4">
@@ -464,7 +464,7 @@ export default function CheckoutPage() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <Button asChild variant="outline" className="rounded-full border-primary/30 text-sm text-secondary-foreground hover:bg-secondary">
                                 <Link href="/shop">
                                     <ArrowLeft className="mr-1 h-4 w-4" />
@@ -472,9 +472,9 @@ export default function CheckoutPage() {
                                 </Link>
                             </Button>
 
-                            <div className="text-right">
+                            <div className="text-center sm:text-right">
                                 <Button
-                                    className="rounded-full bg-primary px-8 py-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90"
+                                    className="w-full rounded-full bg-primary px-8 py-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90 sm:w-auto"
                                     onClick={handlePlaceOrder}
                                     disabled={isPlacing}
                                 >

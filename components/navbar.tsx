@@ -213,6 +213,19 @@ export function Navbar() {
                 )}
               </li>
             ))}
+
+            {/* Divider + Profile/Login */}
+            <li className="my-1 border-t border-border" />
+            <li>
+              <Link
+                href={user ? "/profile" : "/login"}
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
+              >
+                <UserCircle className="h-4 w-4" />
+                {user ? user.name || "My Profile" : "Sign In"}
+              </Link>
+            </li>
           </ul>
         </nav>
       )}
