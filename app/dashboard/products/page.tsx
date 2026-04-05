@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Image from "next/image"
 import { categories } from "@/lib/data"
 import type { Product } from "@/lib/data"
@@ -18,6 +18,9 @@ import {
     Search,
     Package,
     ImageIcon,
+    Upload,
+    Camera,
+    Loader2,
 } from "lucide-react"
 
 const editableCategories = categories.filter((c) => c !== "All")
@@ -46,6 +49,10 @@ export default function ProductsPage() {
     const [colorInput, setColorInput] = useState("")
     const [sizeInput, setSizeInput] = useState("")
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+    const [imageUploading, setImageUploading] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const cameraInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         setProducts(getProducts())
@@ -112,6 +119,30 @@ export default function ProductsPage() {
 
     const removeSize = (s: string) => {
         setForm({ ...form, sizes: form.sizes?.filter((x) => x !== s) })
+    }
+
+    /* ── Image upload handler ── */
+    const handleImageFile = (file: File) => {
+        if (!file.type.startsWith("image/")) return
+        if (file.size > 5 * 1024 * 1024) {
+            alert("Image must be under 5 MB")
+            return
+        }
+        setImageUploading(true)
+        const reader = new FileReader()
+        reader.onload = () => {
+            setForm((prev) => ({ ...prev, image: reader.result as string }))
+            setImageUploading(false)
+        }
+        reader.onerror = () => setImageUploading(false)
+        reader.readAsDataURL(file)
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(false)
+        const file = e.dataTransfer.files?.[0]
+        if (file) handleImageFile(file)
     }
 
     return (
@@ -325,19 +356,112 @@ export default function ProductsPage() {
                                 </div>
                             </div>
 
-                            {/* Image URL */}
+                            {/* Image Upload */}
                             <div>
                                 <label className="mb-1 block text-xs font-bold text-muted-foreground">
                                     <ImageIcon className="mr-1 inline h-3 w-3" />
-                                    Image URL
+                                    Product Image
                                 </label>
+
+                                {/* Preview */}
+                                {form.image && form.image !== "/placeholder.svg?height=400&width=400" && (
+                                    <div className="relative mb-3 aspect-square w-32 overflow-hidden rounded-xl border border-border bg-secondary">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={form.image} alt="Preview" className="h-full w-full object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm({ ...form, image: "/placeholder.svg?height=400&width=400" })}
+                                            className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                                            aria-label="Remove image"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Drop zone */}
+                                <div
+                                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                                    onDragLeave={() => setIsDragging(false)}
+                                    onDrop={handleDrop}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
+                                        isDragging
+                                            ? "border-primary bg-primary/5"
+                                            : "border-border hover:border-primary/50 hover:bg-secondary/30"
+                                    }`}
+                                >
+                                    {imageUploading ? (
+                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                    ) : (
+                                        <Upload className="h-6 w-6 text-muted-foreground" />
+                                    )}
+                                    <div>
+                                        <p className="text-xs font-bold text-foreground">
+                                            {imageUploading ? "Processing..." : "Drag & drop or click to browse"}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground">PNG, JPG, WEBP — Max 5 MB</p>
+                                    </div>
+                                </div>
+
+                                {/* Hidden file inputs */}
                                 <input
-                                    type="text"
-                                    value={form.image}
-                                    onChange={(e) => setForm({ ...form, image: e.target.value })}
-                                    className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-primary"
-                                    placeholder="/images/products/my-product.jpg"
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const f = e.target.files?.[0]
+                                        if (f) handleImageFile(f)
+                                        e.target.value = ""
+                                    }}
                                 />
+                                <input
+                                    ref={cameraInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const f = e.target.files?.[0]
+                                        if (f) handleImageFile(f)
+                                        e.target.value = ""
+                                    }}
+                                />
+
+                                {/* Action buttons */}
+                                <div className="mt-2 flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => cameraInputRef.current?.click()}
+                                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-secondary py-2 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
+                                    >
+                                        <Camera className="h-3.5 w-3.5" />
+                                        Take Photo
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-secondary py-2 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
+                                    >
+                                        <ImageIcon className="h-3.5 w-3.5" />
+                                        Browse Files
+                                    </button>
+                                </div>
+
+                                {/* URL fallback */}
+                                <details className="mt-3">
+                                    <summary className="cursor-pointer text-[10px] font-semibold text-muted-foreground hover:text-foreground">
+                                        Or paste an image URL instead
+                                    </summary>
+                                    <input
+                                        type="text"
+                                        value={form.image.startsWith("data:") ? "" : form.image}
+                                        onChange={(e) => setForm({ ...form, image: e.target.value })}
+                                        className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-2 text-xs outline-none focus:border-primary"
+                                        placeholder="https://example.com/image.jpg"
+                                    />
+                                </details>
                             </div>
 
                             {/* Description */}
