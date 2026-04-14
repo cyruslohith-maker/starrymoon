@@ -29,6 +29,7 @@ const shopCategories = [
   { label: "Phone Charms", href: "/shop?category=Phone+Charms" },
   { label: "Key Chains", href: "/shop?category=Key+Chains" },
   { label: "Hair Clips", href: "/shop?category=Hair+Clips" },
+  { label: "Gemstone", href: "/shop?category=Gemstone" },
 ]
 
 const navLinks = [

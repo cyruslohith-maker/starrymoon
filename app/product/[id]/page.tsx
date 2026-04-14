@@ -55,23 +55,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <PageLayout>
-      <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8 lg:py-12">
+      <div className="mx-auto max-w-7xl px-3 py-5 sm:px-4 sm:py-8 lg:px-8 lg:py-12">
         {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-2 text-xs text-muted-foreground" aria-label="Breadcrumb">
-          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-          <span>/</span>
-          <Link href="/shop" className="hover:text-primary transition-colors">Shop</Link>
-          <span>/</span>
-          <Link href={`/shop?category=${encodeURIComponent(product.category)}`} className="hover:text-primary transition-colors">
+        <nav className="mb-4 flex items-center gap-1.5 overflow-x-auto text-[10px] text-muted-foreground sm:mb-6 sm:gap-2 sm:text-xs" aria-label="Breadcrumb">
+          <Link href="/" className="shrink-0 hover:text-primary transition-colors">Home</Link>
+          <span className="shrink-0">/</span>
+          <Link href="/shop" className="shrink-0 hover:text-primary transition-colors">Shop</Link>
+          <span className="shrink-0">/</span>
+          <Link href={`/shop?category=${encodeURIComponent(product.category)}`} className="shrink-0 hover:text-primary transition-colors">
             {product.category}
           </Link>
-          <span>/</span>
-          <span className="text-foreground font-medium">{product.name}</span>
+          <span className="shrink-0">/</span>
+          <span className="shrink-0 truncate text-foreground font-medium">{product.name}</span>
         </nav>
 
-        <div className="flex flex-col gap-10 lg:flex-row">
+        <div className="flex flex-col gap-6 sm:gap-10 lg:flex-row">
           {/* Image gallery */}
-          <div className="flex flex-col gap-3 lg:w-1/2">
+          <div className="flex flex-col gap-2 sm:gap-3 lg:w-1/2">
             {/* Main image */}
             <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-secondary">
               <Image
@@ -87,13 +87,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </span>
               )}
             </div>
-            {/* Thumbnails */}
-            <div className="flex gap-2">
+            {/* Thumbnails — horizontally scrollable on mobile */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               {images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
-                  className={`relative h-20 w-20 overflow-hidden rounded-xl border-2 transition-all ${
+                  className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all sm:h-20 sm:w-20 sm:rounded-xl ${
                     selectedImage === i ? "border-primary" : "border-border hover:border-primary/50"
                   }`}
                 >
@@ -108,7 +108,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary">
               {product.category}
             </p>
-            <h1 className="mb-2 font-serif text-2xl font-bold text-foreground md:text-3xl">
+            <h1 className="mb-2 font-serif text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
               {product.name}
             </h1>
             <p className="mb-4 text-2xl font-bold text-foreground">
@@ -165,7 +165,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             )}
 
             {/* Actions */}
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
               <Button
                 size="lg"
                 className="flex-1 rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90"
@@ -197,13 +197,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Trust badges */}
-            <div className="mb-6 grid grid-cols-3 gap-3">
+            <div className="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
               {[
                 { icon: Truck, text: "Free shipping over \u20B9499" },
                 { icon: Shield, text: "Quality guaranteed" },
                 { icon: RotateCcw, text: "Easy exchanges" },
               ].map((b) => (
-                <div key={b.text} className="flex flex-col items-center gap-1 rounded-xl border border-border bg-secondary/30 p-3 text-center">
+                <div key={b.text} className="flex flex-col items-center gap-1 rounded-lg border border-border bg-secondary/30 p-2 text-center sm:rounded-xl sm:p-3">
                   <b.icon className="h-4 w-4 text-primary" />
                   <span className="text-[10px] font-medium text-muted-foreground">{b.text}</span>
                 </div>
@@ -268,7 +268,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <h2 className="mb-6 text-center font-serif text-2xl font-bold text-foreground">
               You might also like
             </h2>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
               {related.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

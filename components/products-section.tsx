@@ -14,41 +14,43 @@ export function ProductsSection() {
     active === "All" ? products.slice(0, 8) : products.filter((p) => p.category === active).slice(0, 8)
 
   return (
-    <section id="shop" className="bg-container-soft relative rounded-3xl mx-4 px-4 py-16 lg:mx-8 lg:px-8 lg:py-24">
+    <section id="shop" className="bg-container-soft relative rounded-2xl mx-2 px-3 py-10 sm:rounded-3xl sm:mx-4 sm:px-4 sm:py-16 lg:mx-8 lg:px-8 lg:py-24">
       {/* Section header */}
-      <div className="mb-10 text-center">
+      <div className="mb-6 text-center sm:mb-10">
         <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
           Our Collection
         </p>
-        <h2 className="font-serif text-3xl font-bold text-foreground md:text-4xl">
+        <h2 className="font-serif text-2xl font-bold text-foreground sm:text-3xl md:text-4xl">
           Handpicked for you
         </h2>
-        <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground">
+        <p className="mx-auto mt-3 max-w-md text-pretty text-xs leading-relaxed text-muted-foreground sm:text-sm">
           Every piece is handmade with glass beads and silver charms. Sizes from 5cm to 15cm, standard 7cm.
         </p>
       </div>
 
-      {/* Category filters */}
-      <div className="mb-8 flex flex-wrap items-center justify-center gap-2">
-        {categories.map((cat) => (
-          <Button
-            key={cat}
-            variant={active === cat ? "default" : "outline"}
-            size="sm"
-            className={`rounded-full text-xs ${
-              active === cat
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "border-border bg-card text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-            }`}
-            onClick={() => setActive(cat)}
-          >
-            {cat}
-          </Button>
-        ))}
+      {/* Category filters — horizontally scrollable on mobile */}
+      <div className="mb-6 overflow-x-auto scrollbar-none sm:mb-8">
+        <div className="flex items-center gap-2 justify-start sm:justify-center sm:flex-wrap">
+          {categories.map((cat) => (
+            <Button
+              key={cat}
+              variant={active === cat ? "default" : "outline"}
+              size="sm"
+              className={`shrink-0 rounded-full text-xs ${
+                active === cat
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "border-border bg-card text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
+              }`}
+              onClick={() => setActive(cat)}
+            >
+              {cat}
+            </Button>
+          ))}
+        </div>
       </div>
 
-      {/* Grid */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Grid — 2 cols on mobile */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
         {filtered.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

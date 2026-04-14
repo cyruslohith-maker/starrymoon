@@ -21,6 +21,7 @@ export const categories = [
   "Phone Charms",
   "Key Chains",
   "Hair Clips",
+  "Gemstone",
 ] as const
 
 export type Category = (typeof categories)[number]

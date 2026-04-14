@@ -17,16 +17,16 @@ export function Hero() {
         />
       </div>
 
-      <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center px-4 py-16 text-center lg:px-8 lg:py-28">
+      <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center px-4 py-10 text-center sm:py-16 lg:px-8 lg:py-28">
         {/* Mascot */}
-        <div className="mb-6 animate-float">
+        <div className="mb-4 animate-float sm:mb-6">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.02.22%20%281%29-p2RkRsGEwMqFoSLVEFVzaUpp6WWpyx.jpeg"
             alt="Starrymoon cute mascot"
             width={100}
             height={100}
-            className="rounded-full shadow-lg shadow-primary/30"
-            style={{ width: "100px", height: "auto" }}
+            className="h-16 w-16 rounded-full shadow-lg shadow-primary/30 sm:h-[100px] sm:w-[100px]"
+            style={{ height: "auto" }}
             priority
           />
         </div>
@@ -38,13 +38,13 @@ export function Hero() {
         </div>
 
         {/* Heading */}
-        <h1 className="mb-4 max-w-2xl text-balance font-serif text-4xl font-bold leading-tight text-foreground md:text-5xl lg:text-6xl">
+        <h1 className="mb-3 max-w-2xl text-balance font-serif text-3xl font-bold leading-tight text-foreground sm:mb-4 sm:text-4xl md:text-5xl lg:text-6xl">
           Design Your{" "}
           <span className="text-primary">Sparkle</span>
         </h1>
 
         {/* Subheading */}
-        <p className="mb-8 max-w-md text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
+        <p className="mb-6 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground sm:mb-8 md:text-lg">
           Handcrafted beaded bracelets, necklaces, phone charms and more.
           Each piece made uniquely for you.
         </p>
@@ -66,7 +66,7 @@ export function Hero() {
         </div>
 
         {/* Stats */}
-        <div className="mt-12 flex items-center gap-8 text-center md:gap-12">
+        <div className="mt-8 flex items-center gap-6 text-center sm:mt-12 sm:gap-8 md:gap-12">
           <div>
             <p className="text-2xl font-bold text-foreground md:text-3xl">1,153+</p>
             <p className="text-xs font-medium text-muted-foreground">Instagram Fam</p>
