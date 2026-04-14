@@ -301,7 +301,7 @@ export default function OrdersPage() {
             {/* Header */}
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 className="font-serif text-2xl font-bold text-foreground">Orders & Shipping</h1>
+                    <h1 className="font-serif text-xl font-bold text-foreground sm:text-2xl">Orders & Shipping</h1>
                     <p className="text-sm text-muted-foreground">
                         {orders.length} orders ({serverCount} from website, {localCount} manual)
                     </p>
@@ -334,7 +334,7 @@ export default function OrdersPage() {
             </div>
 
             {/* Fship Info Banner */}
-            <div className="mb-6 rounded-2xl border border-violet-200 bg-violet-50 p-4">
+            <div className="mb-4 rounded-xl border border-violet-200 bg-violet-50 p-3 sm:mb-6 sm:rounded-2xl sm:p-4">
                 <div className="flex items-start gap-3">
                     <Truck className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
                     <div>
@@ -347,7 +347,7 @@ export default function OrdersPage() {
             </div>
 
             {/* Filters */}
-            <div className="mb-6 flex flex-wrap gap-3">
+            <div className="mb-4 flex flex-col gap-2 sm:mb-6 sm:flex-row sm:gap-3">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
@@ -379,8 +379,8 @@ export default function OrdersPage() {
             ) : (
                 <div className="flex flex-col gap-3">
                     {filtered.map((o) => (
-                        <div key={o.id} className="rounded-2xl border border-border bg-card p-5 transition-all hover:shadow-sm">
-                            <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div key={o.id} className="rounded-xl border border-border bg-card p-3 transition-all hover:shadow-sm sm:rounded-2xl sm:p-5">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
                                 <div className="flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <h3 className="text-sm font-bold text-foreground">{o.customerName}</h3>
@@ -513,8 +513,8 @@ export default function OrdersPage() {
 
             {/* ─── LIVE TRACKING MODAL ─── */}
             {trackingAwb && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-16 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-2 pt-4 backdrop-blur-sm sm:p-4 sm:pt-16">
+                    <div className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-2xl sm:p-6">
                         <div className="mb-5 flex items-center justify-between">
                             <h2 className="font-serif text-lg font-bold text-foreground">
                                 Shipment Tracking
@@ -585,8 +585,8 @@ export default function OrdersPage() {
 
             {/* Add/Edit Order Modal */}
             {showForm && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-16 backdrop-blur-sm">
-                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-2 pt-4 backdrop-blur-sm sm:p-4 sm:pt-16">
+                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-4 shadow-2xl sm:p-6">
                         <div className="mb-5 flex items-center justify-between">
                             <h2 className="font-serif text-lg font-bold text-foreground">
                                 {editingId ? "Edit Order" : "Add Order"}

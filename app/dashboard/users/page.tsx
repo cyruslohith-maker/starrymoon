@@ -100,7 +100,7 @@ export default function UsersPage() {
             {/* Header */}
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 className="font-serif text-2xl font-bold text-foreground">User Management</h1>
+                    <h1 className="font-serif text-xl font-bold text-foreground sm:text-2xl">User Management</h1>
                     <p className="text-sm text-muted-foreground">
                         {users.length} total users — {owners.length} owner{owners.length !== 1 ? "s" : ""}, {employees.length} employee{employees.length !== 1 ? "s" : ""}, {customers.length} customer{customers.length !== 1 ? "s" : ""}
                     </p>
@@ -129,7 +129,7 @@ export default function UsersPage() {
                                 const BadgeIcon = badge.icon
                                 const isCurrentUser = currentUser?.id === u.id
                                 return (
-                                    <div key={u.id} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+                                    <div key={u.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-3 sm:rounded-2xl sm:p-4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                                                 <BadgeIcon className="h-5 w-5 text-primary" />
@@ -161,7 +161,7 @@ export default function UsersPage() {
                             </h2>
                             <div className="flex flex-col gap-2">
                                 {customers.map((u) => (
-                                    <div key={u.id} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+                                    <div key={u.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-3 sm:rounded-2xl sm:p-4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
                                                 <User className="h-5 w-5 text-emerald-600" />
@@ -184,8 +184,8 @@ export default function UsersPage() {
 
             {/* Add Staff Modal */}
             {showForm && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-16 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-2 pt-4 backdrop-blur-sm sm:p-4 sm:pt-16">
+                    <div className="w-full max-w-md rounded-2xl border border-border bg-card p-4 shadow-2xl sm:p-6">
                         <div className="mb-5 flex items-center justify-between">
                             <h2 className="font-serif text-lg font-bold text-foreground">Add Staff Account</h2>
                             <button onClick={() => setShowForm(false)} className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary">

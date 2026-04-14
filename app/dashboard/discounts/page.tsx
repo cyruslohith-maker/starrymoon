@@ -133,7 +133,7 @@ export default function DiscountsPage() {
     return (
         <div>
             <div className="mb-6">
-                <h1 className="font-serif text-2xl font-bold text-foreground">Discounts & Freebies</h1>
+                <h1 className="font-serif text-xl font-bold text-foreground sm:text-2xl">Discounts & Freebies</h1>
                 <p className="text-sm text-muted-foreground">Manage sale prices, coupon codes, and free gifts</p>
             </div>
 
@@ -175,7 +175,7 @@ export default function DiscountsPage() {
                     ) : (
                         <div className="flex flex-col gap-3">
                             {discounts.map((d) => (
-                                <div key={d.id} className={`rounded-2xl border bg-card p-5 transition-all ${d.active ? "border-emerald-300" : "border-border opacity-60"}`}>
+                                <div key={d.id} className={`rounded-xl border bg-card p-3 transition-all sm:rounded-2xl sm:p-5 ${d.active ? "border-emerald-300" : "border-border opacity-60"}`}>
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
@@ -232,7 +232,7 @@ export default function DiscountsPage() {
                                 const triggerProduct = products.find((p) => p.id === f.triggerProductId)
                                 const freebieProduct = products.find((p) => p.id === f.freebieProductId)
                                 return (
-                                    <div key={f.id} className={`rounded-2xl border bg-card p-5 transition-all ${f.active ? "border-violet-300" : "border-border opacity-60"}`}>
+                                    <div key={f.id} className={`rounded-xl border bg-card p-3 transition-all sm:rounded-2xl sm:p-5 ${f.active ? "border-violet-300" : "border-border opacity-60"}`}>
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
@@ -269,8 +269,8 @@ export default function DiscountsPage() {
 
             {/* ─── DISCOUNT FORM MODAL ─── */}
             {showDiscountForm && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-16 backdrop-blur-sm">
-                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-2 pt-4 backdrop-blur-sm sm:p-4 sm:pt-16">
+                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-4 shadow-2xl sm:p-6">
                         <div className="mb-5 flex items-center justify-between">
                             <h2 className="font-serif text-lg font-bold text-foreground">
                                 {editingDiscountId ? "Edit Discount" : "Create Discount"}
@@ -375,8 +375,8 @@ export default function DiscountsPage() {
 
             {/* ─── FREEBIE FORM MODAL ─── */}
             {showFreebieForm && (
-                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 pt-16 backdrop-blur-sm">
-                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-2 pt-4 backdrop-blur-sm sm:p-4 sm:pt-16">
+                    <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-4 shadow-2xl sm:p-6">
                         <div className="mb-5 flex items-center justify-between">
                             <h2 className="font-serif text-lg font-bold text-foreground">
                                 {editingFreebieId ? "Edit Freebie" : "Create Freebie Rule"}

@@ -175,8 +175,8 @@ export default function ProductsPage() {
             {/* Header */}
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 className="font-serif text-2xl font-bold text-foreground">Products</h1>
-                    <p className="text-sm text-muted-foreground">{products.length} products total</p>
+                    <h1 className="font-serif text-xl font-bold text-foreground sm:text-2xl">Products</h1>
+                    <p className="text-xs text-muted-foreground">{products.length} products total</p>
                 </div>
                 <button
                     onClick={openAdd}
@@ -188,7 +188,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Filters */}
-            <div className="mb-6 flex flex-wrap gap-3">
+            <div className="mb-4 flex flex-col gap-2 sm:mb-6 sm:flex-row sm:gap-3">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
@@ -234,13 +234,13 @@ export default function ProductsPage() {
                         </div>
 
                         {/* Info */}
-                        <div className="p-4">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        <div className="p-3 sm:p-4">
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground sm:text-[10px]">
                                 {p.category}
                             </p>
-                            <h3 className="mt-1 text-sm font-bold text-card-foreground">{p.name}</h3>
-                            <div className="mt-2 flex items-center justify-between">
-                                <span className="text-lg font-bold text-foreground">₹{p.price}</span>
+                            <h3 className="mt-1 text-xs font-bold text-card-foreground line-clamp-1 sm:text-sm">{p.name}</h3>
+                            <div className="mt-1.5 flex flex-col gap-1 sm:mt-2 sm:flex-row sm:items-center sm:justify-between">
+                                <span className="text-sm font-bold text-foreground sm:text-lg">₹{p.price}</span>
                                 <span
                                     className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${(p.quantity ?? 0) > 0
                                             ? "bg-emerald-500/10 text-emerald-600"

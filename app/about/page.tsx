@@ -30,9 +30,9 @@ const highlights = [
 export default function AboutPage() {
   return (
     <PageLayout>
-      <div className="mx-auto max-w-5xl px-4 py-8 lg:px-8 lg:py-16">
+      <div className="mx-auto max-w-5xl px-3 py-6 sm:px-4 sm:py-8 lg:px-8 lg:py-16">
         {/* Hero section */}
-        <div className="mb-16 flex flex-col items-center gap-10 md:flex-row md:gap-16">
+        <div className="mb-10 flex flex-col items-center gap-6 sm:mb-16 md:flex-row md:gap-16">
           <div className="flex w-full max-w-xs flex-col items-center">
             <div className="animate-float">
               <Image
@@ -49,7 +49,7 @@ export default function AboutPage() {
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
               About Starrymoon
             </p>
-            <h1 className="mb-4 font-serif text-3xl font-bold text-foreground md:text-4xl">
+            <h1 className="mb-4 font-serif text-2xl font-bold text-foreground sm:text-3xl md:text-4xl">
               {"Hi, I'm Pragya!"}
             </h1>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -82,13 +82,13 @@ export default function AboutPage() {
         </div>
 
         {/* Highlights */}
-        <div className="mb-16">
-          <h2 className="mb-8 text-center font-serif text-2xl font-bold text-foreground">
+        <div className="mb-10 sm:mb-16">
+          <h2 className="mb-5 text-center font-serif text-xl font-bold text-foreground sm:mb-8 sm:text-2xl">
             Why Starrymoon?
           </h2>
           <div className="grid gap-6 sm:grid-cols-2">
             {highlights.map((h) => (
-              <div key={h.title} className="flex items-start gap-4 rounded-2xl border border-border bg-card p-5">
+              <div key={h.title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 sm:gap-4 sm:rounded-2xl sm:p-5">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary">
                   <h.icon className="h-5 w-5 text-primary" />
                 </div>
@@ -102,8 +102,8 @@ export default function AboutPage() {
         </div>
 
         {/* Stats */}
-        <div className="rounded-2xl border border-border bg-card p-8">
-          <div className="flex flex-col items-center gap-8 text-center md:flex-row md:justify-around">
+        <div className="rounded-xl border border-border bg-card p-5 sm:rounded-2xl sm:p-8">
+          <div className="grid grid-cols-2 gap-4 text-center md:flex md:flex-row md:items-center md:justify-around md:gap-8">
             <div>
               <p className="text-3xl font-bold text-foreground">1,153+</p>
               <p className="text-xs font-medium text-muted-foreground">Instagram Fam</p>

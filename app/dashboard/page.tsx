@@ -31,24 +31,24 @@ export default function DashboardPage() {
 
     return (
         <div>
-            <div className="mb-8">
-                <h1 className="font-serif text-2xl font-bold text-foreground">Dashboard</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Welcome back to Starrymoon management</p>
+            <div className="mb-5 sm:mb-8">
+                <h1 className="font-serif text-xl font-bold text-foreground sm:text-2xl">Dashboard</h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">Welcome back to Starrymoon management</p>
             </div>
 
             {/* Stats grid */}
-            <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mb-5 grid grid-cols-2 gap-3 sm:mb-8 sm:gap-4 lg:grid-cols-4">
                 {cards.map((card) => (
                     <Link
                         key={card.label}
                         href={card.href}
-                        className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5"
+                        className="group flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/5 sm:gap-4 sm:rounded-2xl sm:p-5"
                     >
-                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${card.color}`}>
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg sm:h-12 sm:w-12 sm:rounded-xl ${card.color}`}>
                             <card.icon className="h-5 w-5" />
                         </div>
                         <div className="flex-1">
-                            <p className="text-2xl font-bold text-foreground">{card.value}</p>
+                            <p className="text-xl font-bold text-foreground sm:text-2xl">{card.value}</p>
                             <p className="text-xs font-semibold text-muted-foreground">{card.label}</p>
                         </div>
                         <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
@@ -57,9 +57,9 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick actions */}
-            <div className="rounded-2xl border border-border bg-card p-6">
-                <h2 className="mb-4 text-sm font-bold text-foreground">Quick Actions</h2>
-                <div className="flex flex-wrap gap-3">
+            <div className="rounded-xl border border-border bg-card p-4 sm:rounded-2xl sm:p-6">
+                <h2 className="mb-3 text-xs font-bold text-foreground sm:mb-4 sm:text-sm">Quick Actions</h2>
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
                     <Link
                         href="/dashboard/products"
                         className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"

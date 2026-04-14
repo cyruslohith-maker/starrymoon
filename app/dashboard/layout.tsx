@@ -1,6 +1,6 @@
 "use client"
 
-import { type ReactNode } from "react"
+import { type ReactNode, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
@@ -15,6 +15,8 @@ import {
     Store,
     Users,
     Loader2,
+    Menu,
+    X,
 } from "lucide-react"
 
 const navItems = [
@@ -29,6 +31,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     const { user, loading, logout, isStaff, isOwner } = useAuth()
     const pathname = usePathname()
     const router = useRouter()
+    const [sidebarOpen, setSidebarOpen] = useState(false)
 
     // Show loading while checking auth
     if (loading) {
@@ -58,14 +61,37 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         item.roles.includes(user.role)
     )
 
+    const closeSidebar = () => setSidebarOpen(false)
+
     return (
         <div className="flex min-h-screen" style={{ background: "#FFF5F7" }}>
-            {/* Sidebar */}
-            <aside className="fixed left-0 top-0 z-40 flex h-full w-56 flex-col border-r border-border bg-card">
+            {/* Mobile overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+                    onClick={closeSidebar}
+                    aria-hidden="true"
+                />
+            )}
+
+            {/* Sidebar — fixed on desktop, slide-in on mobile */}
+            <aside
+                className={`fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r border-border bg-card transition-transform duration-300 lg:z-40 lg:w-56 lg:translate-x-0 ${
+                    sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                }`}
+            >
                 {/* Header */}
                 <div className="flex h-14 items-center gap-2 border-b border-border px-4">
                     <span className="font-serif text-sm font-bold text-foreground">Starrymoon</span>
-                    <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" />
+                    <ChevronRight className="ml-auto hidden h-4 w-4 text-muted-foreground lg:block" />
+                    {/* Close button for mobile */}
+                    <button
+                        onClick={closeSidebar}
+                        className="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary lg:hidden"
+                        aria-label="Close menu"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
                 </div>
 
                 {/* User info */}
@@ -89,6 +115,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                onClick={closeSidebar}
                                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${active
                                     ? "bg-primary/10 text-primary"
                                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -106,6 +133,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <div className="flex flex-col gap-1 border-t border-border p-2">
                     <Link
                         href="/"
+                        onClick={closeSidebar}
                         className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                         title="View Store"
                     >
@@ -124,8 +152,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </aside>
 
             {/* Main content */}
-            <main className="ml-56 flex-1">
-                <div className="p-6 lg:p-8">
+            <main className="flex-1 lg:ml-56">
+                {/* Mobile top bar */}
+                <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/90 px-4 py-3 backdrop-blur-sm lg:hidden">
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-foreground"
+                        aria-label="Open menu"
+                    >
+                        <Menu className="h-5 w-5" />
+                    </button>
+                    <span className="font-serif text-sm font-bold text-foreground">Starrymoon</span>
+                    <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold capitalize text-primary">
+                        {user.role}
+                    </span>
+                </div>
+
+                <div className="p-4 sm:p-6 lg:p-8">
                     {/* Employee restriction notice */}
                     {!isOwner && (
                         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5">

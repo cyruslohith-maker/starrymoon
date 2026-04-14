@@ -87,13 +87,13 @@ export default function CustomizePage() {
 
   return (
     <PageLayout>
-      <div className="mx-auto max-w-2xl px-4 py-8 lg:px-8 lg:py-12">
+      <div className="mx-auto max-w-2xl px-3 py-6 sm:px-4 sm:py-8 lg:px-8 lg:py-12">
         {/* Header */}
-        <div className="mb-8 text-center">
+        <div className="mb-6 text-center sm:mb-8">
           <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
             Custom Orders
           </p>
-          <h1 className="font-serif text-3xl font-bold text-foreground md:text-4xl">
+          <h1 className="font-serif text-2xl font-bold text-foreground sm:text-3xl md:text-4xl">
             Design Something Unique
           </h1>
           <p className="mx-auto mt-3 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground">
@@ -101,7 +101,7 @@ export default function CustomizePage() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-xl md:p-8">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-xl sm:p-6 md:p-8">
           {/* ─── Order Type Selector ─── */}
           <div className="mb-6">
             <label className="mb-3 block text-xs font-bold uppercase tracking-widest text-muted-foreground">
