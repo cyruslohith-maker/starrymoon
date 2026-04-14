@@ -21,11 +21,8 @@ export function ProductsSection() {
           Our Collection
         </p>
         <h2 className="font-serif text-2xl font-bold text-foreground sm:text-3xl md:text-4xl">
-          Handpicked for you
+          Handmade for you
         </h2>
-        <p className="mx-auto mt-3 max-w-md text-pretty text-xs leading-relaxed text-muted-foreground sm:text-sm">
-          Every piece is handmade with glass beads and silver charms. Sizes from 5cm to 15cm, standard 7cm.
-        </p>
       </div>
 
       {/* Category filters — horizontally scrollable on mobile */}
@@ -36,11 +33,10 @@ export function ProductsSection() {
               key={cat}
               variant={active === cat ? "default" : "outline"}
               size="sm"
-              className={`shrink-0 rounded-full text-xs ${
-                active === cat
+              className={`shrink-0 rounded-full text-xs ${active === cat
                   ? "bg-primary text-primary-foreground hover:bg-primary/90"
                   : "border-border bg-card text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-              }`}
+                }`}
               onClick={() => setActive(cat)}
             >
               {cat}

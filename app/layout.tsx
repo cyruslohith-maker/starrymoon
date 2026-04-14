@@ -54,7 +54,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${nunito.variable} ${playfair.variable}`}>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased" style={{ background: "#FEBEC3" }}>
+        {/* Prevent hero flash: hide content until loading screen JS hydrates */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          body > *:not(.loading-screen):not(script):not(style) {
+            visibility: hidden;
+          }
+          .loading-screen ~ * {
+            visibility: visible !important;
+          }
+          body.app-loaded > * {
+            visibility: visible !important;
+          }
+        ` }} />
         <AuthProvider>
           <CartProvider>
             <LoadingScreen />

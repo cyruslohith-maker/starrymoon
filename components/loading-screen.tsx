@@ -7,22 +7,39 @@ export function LoadingScreen() {
     const [fadeOut, setFadeOut] = useState(false)
     const videoRef = useRef<HTMLVideoElement>(null)
 
+    /* Hide body content while loading */
+    useEffect(() => {
+        // Immediately hide overflow + set bg to prevent flash
+        document.documentElement.style.overflow = "hidden"
+        document.body.style.overflow = "hidden"
+
+        return () => {
+            document.documentElement.style.overflow = ""
+            document.body.style.overflow = ""
+        }
+    }, [])
+
     useEffect(() => {
         const video = videoRef.current
         if (!video) return
 
-        const handleEnded = () => {
+        const dismiss = () => {
             setFadeOut(true)
-            setTimeout(() => setVisible(false), 600)
+            setTimeout(() => {
+                setVisible(false)
+                // Restore scrolling and show content
+                document.documentElement.style.overflow = ""
+                document.body.style.overflow = ""
+                document.body.classList.add("app-loaded")
+                document.body.style.background = ""
+            }, 600)
         }
 
+        const handleEnded = () => dismiss()
         video.addEventListener("ended", handleEnded)
 
         // Fallback: auto-dismiss after 5s
-        const fallback = setTimeout(() => {
-            setFadeOut(true)
-            setTimeout(() => setVisible(false), 600)
-        }, 5000)
+        const fallback = setTimeout(dismiss, 5000)
 
         return () => {
             video.removeEventListener("ended", handleEnded)

@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { LiveStats } from "@/components/live-stats"
 import { Heart, Sparkles, ShoppingBag } from "lucide-react"
 
 export function Hero() {
@@ -65,23 +66,7 @@ export function Hero() {
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="mt-8 flex items-center gap-6 text-center sm:mt-12 sm:gap-8 md:gap-12">
-          <div>
-            <p className="text-2xl font-bold text-foreground md:text-3xl">1,153+</p>
-            <p className="text-xs font-medium text-muted-foreground">Instagram Fam</p>
-          </div>
-          <div className="h-8 w-px bg-border" />
-          <div>
-            <p className="text-2xl font-bold text-foreground md:text-3xl">500+</p>
-            <p className="text-xs font-medium text-muted-foreground">Happy Customers</p>
-          </div>
-          <div className="h-8 w-px bg-border" />
-          <div>
-            <p className="text-2xl font-bold text-foreground md:text-3xl">100%</p>
-            <p className="text-xs font-medium text-muted-foreground">Handmade</p>
-          </div>
-        </div>
+        <LiveStats />
       </div>
 
       {/* Chrome heart decoration */}
