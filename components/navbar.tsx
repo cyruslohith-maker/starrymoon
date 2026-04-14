@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
@@ -17,6 +17,7 @@ import {
   HeadphonesIcon,
   ChevronDown,
   UserCircle,
+  LayoutDashboard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-context"
@@ -44,9 +45,25 @@ const navLinks = [
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
+  const mobileNavRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const { itemCount, openCart } = useCart()
-  const { user } = useAuth()
+  const { user, isStaff } = useAuth()
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => { document.body.style.overflow = "" }
+  }, [mobileOpen])
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/90 backdrop-blur-lg">
@@ -129,6 +146,22 @@ export function Navbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-1">
+          {/* Dashboard button — only for staff */}
+          {isStaff && (
+            <Link
+              href="/dashboard"
+              className="group relative mr-1 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-pink-400 px-3 py-1.5 text-[11px] font-bold text-white shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30 hover:brightness-110 sm:px-4 sm:py-2 sm:text-xs"
+              title="Go to Dashboard"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5 items-center justify-center">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+              </span>
+            </Link>
+          )}
+
           {/* Profile / Login */}
           <Link
             href={user ? "/profile" : "/login"}
@@ -178,18 +211,32 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
-      {mobileOpen && (
-        <nav className="border-t border-border bg-card px-4 pb-4 lg:hidden" aria-label="Mobile navigation">
-          <ul className="flex flex-col gap-0.5 pt-2">
+      {/* Mobile Navigation — slide-down overlay */}
+      <div
+        className={`fixed inset-0 top-[65px] z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
+          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+      />
+      <div
+        ref={mobileNavRef}
+        className={`fixed left-0 right-0 top-[65px] z-50 max-h-[calc(100vh-65px)] overflow-y-auto border-b border-border bg-card shadow-2xl shadow-black/10 transition-all duration-300 ease-out lg:hidden ${
+          mobileOpen
+            ? "translate-y-0 opacity-100"
+            : "-translate-y-4 opacity-0 pointer-events-none"
+        }`}
+      >
+        <nav className="px-4 pb-5 pt-3" aria-label="Mobile navigation">
+          <ul className="flex flex-col gap-0.5">
             {navLinks.map((link) => (
               <li key={link.label}>
                 <Link
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
+                  className={`flex items-center gap-2.5 rounded-xl px-3 py-3 text-sm font-semibold transition-all ${
                     pathname === link.href
-                      ? "bg-secondary text-secondary-foreground"
+                      ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
                   }`}
                 >
@@ -198,13 +245,13 @@ export function Navbar() {
                 </Link>
                 {/* Mobile shop subcategories */}
                 {link.hasDropdown && (
-                  <ul className="ml-8 flex flex-col gap-0.5 pb-1">
+                  <ul className="ml-9 flex flex-col gap-0.5 pb-1">
                     {shopCategories.map((cat) => (
                       <li key={cat.label}>
                         <Link
                           href={cat.href}
                           onClick={() => setMobileOpen(false)}
-                          className="block rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
+                          className="block rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
                         >
                           {cat.label}
                         </Link>
@@ -215,13 +262,29 @@ export function Navbar() {
               </li>
             ))}
 
-            {/* Divider + Profile/Login */}
-            <li className="my-1 border-t border-border" />
+            {/* Divider */}
+            <li className="my-2 border-t border-border" />
+
+            {/* Dashboard link for staff — prominent in mobile */}
+            {isStaff && (
+              <li>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-primary/10 to-pink-100 px-3 py-3 text-sm font-bold text-primary transition-all hover:from-primary/20 hover:to-pink-200"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Owner Dashboard
+                </Link>
+              </li>
+            )}
+
+            {/* Profile / Login */}
             <li>
               <Link
                 href={user ? "/profile" : "/login"}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
+                className="flex items-center gap-2.5 rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
               >
                 <UserCircle className="h-4 w-4" />
                 {user ? user.name || "My Profile" : "Sign In"}
@@ -229,7 +292,7 @@ export function Navbar() {
             </li>
           </ul>
         </nav>
-      )}
+      </div>
     </header>
   )
 }
