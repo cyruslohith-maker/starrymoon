@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { findUserByEmail, verifyPassword, createSession, toSafeUser, SESSION_COOKIE, seedOwnerIfNeeded } from "@/lib/auth"
+import { findUserByEmail, verifyPassword, createSession, updateUser, toSafeUser, SESSION_COOKIE, seedOwnerIfNeeded } from "@/lib/auth"
+
+// Owner emails — auto-promoted to owner on login
+const OWNER_EMAILS = [
+    "cyruslohith@gmail.com",
+    "pragyajmamgai@gmail.com",
+]
 
 /**
  * POST /api/auth/login
@@ -25,6 +31,12 @@ export async function POST(req: NextRequest) {
         const valid = verifyPassword(password, user.passwordHash, user.salt)
         if (!valid) {
             return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
+        }
+
+        // Auto-promote to owner if email is in the owner list
+        if (OWNER_EMAILS.includes(user.email.toLowerCase()) && user.role !== "owner") {
+            await updateUser(user.id, { role: "owner" })
+            user.role = "owner"
         }
 
         // Create session
