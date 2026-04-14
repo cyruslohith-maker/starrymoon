@@ -15,7 +15,7 @@ export function ProductCard({ product }: { product: Product }) {
   const [discountedPrice, setDiscountedPrice] = useState<number | null>(null)
 
   useEffect(() => {
-    setDiscountedPrice(getDiscountedPrice(product))
+    getDiscountedPrice(product).then(setDiscountedPrice).catch(() => {})
   }, [product])
 
   return (

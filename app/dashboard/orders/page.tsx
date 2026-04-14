@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import {
     getOrders as getLocalOrders, addOrder as addLocalOrder, updateOrder as updateLocalOrder, deleteOrder as deleteLocalOrder,
     getProducts,
@@ -12,6 +12,7 @@ import {
     ExternalLink, ChevronDown, Search, MapPin, Loader2,
     Download, Send,
 } from "lucide-react"
+import { useToast } from "@/components/toast"
 
 const statusLabels = {
     pending: "Pending",
@@ -82,6 +83,7 @@ export default function OrdersPage() {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [form, setForm] = useState(emptyOrder)
     const [showStatusDropdown, setShowStatusDropdown] = useState<string | null>(null)
+    const toast = useToast()
 
     // Live tracking state
     const [trackingAwb, setTrackingAwb] = useState<string | null>(null)
@@ -93,13 +95,8 @@ export default function OrdersPage() {
     const [pushingId, setPushingId] = useState<string | null>(null)
     const [pushResult, setPushResult] = useState<{ id: string; msg: string; ok: boolean } | null>(null)
 
-    useEffect(() => {
-        loadOrders()
-        setProducts(getProducts())
-    }, [])
-
-    const loadOrders = async () => {
-        // Load from server
+    const loadOrders = useCallback(async () => {
+        // Load from server API
         let serverOrders: UnifiedOrder[] = []
         try {
             const res = await fetch("/api/orders")
@@ -111,20 +108,33 @@ export default function OrdersPage() {
                 }))
             }
         } catch {
-            // Server might not be available — fall back to local
+            // Server might not be available
         }
 
-        // Load from local (manually added ones)
-        const localOrders: UnifiedOrder[] = getLocalOrders().map((o) => ({
-            ...o,
-            source: "local" as const,
-        }))
+        // Load from Supabase (dashboard-added orders)
+        let localOrders: UnifiedOrder[] = []
+        try {
+            const lo = await getLocalOrders()
+            localOrders = lo.map((o) => ({
+                ...o,
+                source: "local" as const,
+            }))
+        } catch (err) {
+            console.error("Failed to load local orders:", err)
+        }
 
         // Merge — server orders first, then local ones not duplicated
         const serverIds = new Set(serverOrders.map((o) => o.id))
         const merged = [...serverOrders, ...localOrders.filter((o) => !serverIds.has(o.id))]
         setOrders(merged)
-    }
+    }, [])
+
+    useEffect(() => {
+        loadOrders()
+        getProducts().then(setProducts).catch(console.error)
+    }, [loadOrders])
+
+
 
     const filtered = orders
         .filter((o) => {
@@ -152,53 +162,69 @@ export default function OrdersPage() {
     const handleSave = async () => {
         if (!form.customerName) return
         const total = form.items.reduce((sum, i) => sum + i.price * i.quantity, 0)
-        if (editingId) {
-            // Check if server order
-            const existing = orders.find((o) => o.id === editingId)
-            if (existing?.source === "server") {
-                await fetch("/api/orders", {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: editingId, ...form, total }),
-                })
+        try {
+            if (editingId) {
+                const existing = orders.find((o) => o.id === editingId)
+                if (existing?.source === "server") {
+                    await fetch("/api/orders", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: editingId, ...form, total }),
+                    })
+                } else {
+                    await updateLocalOrder(editingId, { ...form, total })
+                }
+                toast.success("Order updated!")
             } else {
-                updateLocalOrder(editingId, { ...form, total })
+                await addLocalOrder({ ...form, total })
+                toast.success("Order created!")
             }
-        } else {
-            addLocalOrder({ ...form, total })
+            setShowForm(false)
+            await loadOrders()
+        } catch (err) {
+            toast.error("Failed to save order")
+            console.error(err)
         }
-        setShowForm(false)
-        await loadOrders()
     }
 
     const changeStatus = async (id: string, status: UnifiedOrder["status"]) => {
-        const order = orders.find((o) => o.id === id)
-        if (order?.source === "server") {
-            await fetch("/api/orders", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id, status }),
-            })
-        } else {
-            updateLocalOrder(id, { status })
+        try {
+            const order = orders.find((o) => o.id === id)
+            if (order?.source === "server") {
+                await fetch("/api/orders", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id, status }),
+                })
+            } else {
+                await updateLocalOrder(id, { status })
+            }
+            setShowStatusDropdown(null)
+            await loadOrders()
+        } catch (err) {
+            toast.error("Failed to update status")
+            console.error(err)
         }
-        setShowStatusDropdown(null)
-        await loadOrders()
     }
 
     const handleDelete = async (o: UnifiedOrder) => {
-        if (o.source === "local") {
-            deleteLocalOrder(o.id)
+        try {
+            if (o.source === "local") {
+                await deleteLocalOrder(o.id)
+            }
+            if (o.source === "server") {
+                await fetch("/api/orders", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: o.id, status: "cancelled" }),
+                })
+            }
+            toast.success(o.source === "local" ? "Order deleted" : "Order cancelled")
+            await loadOrders()
+        } catch (err) {
+            toast.error("Failed to delete order")
+            console.error(err)
         }
-        // For server orders we don't delete — just mark cancelled
-        if (o.source === "server") {
-            await fetch("/api/orders", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: o.id, status: "cancelled" }),
-            })
-        }
-        await loadOrders()
     }
 
     const addItemToOrder = (product: Product) => {

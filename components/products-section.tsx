@@ -1,17 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ProductCard } from "@/components/product-card"
 import { Button } from "@/components/ui/button"
-import { products, categories } from "@/lib/data"
+import { categories } from "@/lib/data"
+import type { Product } from "@/lib/data"
+import { getProducts } from "@/lib/dashboard-store"
 import { ArrowRight } from "lucide-react"
 
 export function ProductsSection() {
   const [active, setActive] = useState<string>("All")
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+
+  useEffect(() => {
+    getProducts().then(setAllProducts).catch(console.error)
+  }, [])
 
   const filtered =
-    active === "All" ? products.slice(0, 8) : products.filter((p) => p.category === active).slice(0, 8)
+    active === "All" ? allProducts.slice(0, 8) : allProducts.filter((p) => p.category === active).slice(0, 8)
 
   return (
     <section id="shop" className="bg-container-soft relative rounded-2xl mx-2 px-3 py-10 sm:rounded-3xl sm:mx-4 sm:px-4 sm:py-16 lg:mx-8 lg:px-8 lg:py-24">
@@ -34,8 +41,8 @@ export function ProductsSection() {
               variant={active === cat ? "default" : "outline"}
               size="sm"
               className={`shrink-0 rounded-full text-xs ${active === cat
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "border-border bg-card text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "border-border bg-card text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
                 }`}
               onClick={() => setActive(cat)}
             >

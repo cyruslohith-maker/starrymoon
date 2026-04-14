@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { categories } from "@/lib/data"
 import {
     getDiscounts, addDiscount, updateDiscount, deleteDiscount,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/dashboard-store"
 import type { Product } from "@/lib/data"
 import { Plus, Pencil, Trash2, X, Tag, Gift, ToggleLeft, ToggleRight } from "lucide-react"
+import { useToast } from "@/components/toast"
 
 const editableCategories = categories.filter((c) => c !== "All")
 
@@ -43,6 +44,7 @@ export default function DiscountsPage() {
     const [discounts, setDiscounts] = useState<DiscountRule[]>([])
     const [freebies, setFreebies] = useState<FreebieRule[]>([])
     const [products, setProducts] = useState<Product[]>([])
+    const toast = useToast()
 
     // Discount form
     const [showDiscountForm, setShowDiscountForm] = useState(false)
@@ -54,14 +56,19 @@ export default function DiscountsPage() {
     const [editingFreebieId, setEditingFreebieId] = useState<string | null>(null)
     const [freebieForm, setFreebieForm] = useState(emptyFreebie)
 
-    useEffect(() => {
-        setDiscounts(getDiscounts())
-        setFreebies(getFreebies())
-        setProducts(getProducts())
-    }, [])
+    const loadAll = useCallback(async () => {
+        try {
+            const [d, f, p] = await Promise.all([getDiscounts(), getFreebies(), getProducts()])
+            setDiscounts(d)
+            setFreebies(f)
+            setProducts(p)
+        } catch (err) {
+            console.error(err)
+            toast.error("Failed to load data")
+        }
+    }, [toast])
 
-    const refreshDiscounts = () => setDiscounts(getDiscounts())
-    const refreshFreebies = () => setFreebies(getFreebies())
+    useEffect(() => { loadAll() }, [loadAll])
 
     // ── Discount handlers ──
     const openAddDiscount = () => {
@@ -76,20 +83,32 @@ export default function DiscountsPage() {
         setShowDiscountForm(true)
     }
 
-    const saveDiscount = () => {
+    const saveDiscount = async () => {
         if (!discountForm.name) return
-        if (editingDiscountId) {
-            updateDiscount(editingDiscountId, discountForm)
-        } else {
-            addDiscount(discountForm)
+        try {
+            if (editingDiscountId) {
+                await updateDiscount(editingDiscountId, discountForm)
+                toast.success("Discount updated!")
+            } else {
+                await addDiscount(discountForm)
+                toast.success("Discount created!")
+            }
+            setShowDiscountForm(false)
+            await loadAll()
+        } catch (err) {
+            toast.error("Failed to save discount")
+            console.error(err)
         }
-        setShowDiscountForm(false)
-        refreshDiscounts()
     }
 
-    const toggleDiscount = (id: string, active: boolean) => {
-        updateDiscount(id, { active })
-        refreshDiscounts()
+    const toggleDiscount = async (id: string, active: boolean) => {
+        try {
+            await updateDiscount(id, { active })
+            await loadAll()
+        } catch (err) {
+            toast.error("Failed to toggle discount")
+            console.error(err)
+        }
     }
 
     // ── Freebie handlers ──
@@ -105,20 +124,32 @@ export default function DiscountsPage() {
         setShowFreebieForm(true)
     }
 
-    const saveFreebie = () => {
+    const saveFreebie = async () => {
         if (!freebieForm.name) return
-        if (editingFreebieId) {
-            updateFreebie(editingFreebieId, freebieForm)
-        } else {
-            addFreebie(freebieForm)
+        try {
+            if (editingFreebieId) {
+                await updateFreebie(editingFreebieId, freebieForm)
+                toast.success("Freebie updated!")
+            } else {
+                await addFreebie(freebieForm)
+                toast.success("Freebie created!")
+            }
+            setShowFreebieForm(false)
+            await loadAll()
+        } catch (err) {
+            toast.error("Failed to save freebie")
+            console.error(err)
         }
-        setShowFreebieForm(false)
-        refreshFreebies()
     }
 
-    const toggleFreebie = (id: string, active: boolean) => {
-        updateFreebie(id, { active })
-        refreshFreebies()
+    const toggleFreebie = async (id: string, active: boolean) => {
+        try {
+            await updateFreebie(id, { active })
+            await loadAll()
+        } catch (err) {
+            toast.error("Failed to toggle freebie")
+            console.error(err)
+        }
     }
 
     // ── Product multi-select for discounts ──
@@ -199,7 +230,7 @@ export default function DiscountsPage() {
                                             <button onClick={() => openEditDiscount(d)} className="text-muted-foreground hover:text-foreground">
                                                 <Pencil className="h-4 w-4" />
                                             </button>
-                                            <button onClick={() => { deleteDiscount(d.id); refreshDiscounts() }} className="text-muted-foreground hover:text-destructive">
+                                            <button onClick={async () => { try { await deleteDiscount(d.id); toast.success("Discount deleted"); await loadAll() } catch { toast.error("Failed to delete") } }} className="text-muted-foreground hover:text-destructive">
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
                                         </div>
@@ -254,7 +285,7 @@ export default function DiscountsPage() {
                                                 <button onClick={() => openEditFreebie(f)} className="text-muted-foreground hover:text-foreground">
                                                     <Pencil className="h-4 w-4" />
                                                 </button>
-                                                <button onClick={() => { deleteFreebie(f.id); refreshFreebies() }} className="text-muted-foreground hover:text-destructive">
+                                                <button onClick={async () => { try { await deleteFreebie(f.id); toast.success("Freebie deleted"); await loadAll() } catch { toast.error("Failed to delete") } }} className="text-muted-foreground hover:text-destructive">
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
                                             </div>

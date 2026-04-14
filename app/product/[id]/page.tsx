@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState } from "react"
+import { use, useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { PageLayout } from "@/components/page-layout"
@@ -12,7 +12,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { useCart } from "@/lib/cart-context"
-import { products } from "@/lib/data"
+import type { Product } from "@/lib/data"
+import { getProducts } from "@/lib/dashboard-store"
 import { ProductCard } from "@/components/product-card"
 import {
   Heart,
@@ -26,11 +27,35 @@ import {
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const product = products.find((p) => p.id === id)
+  
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getProducts().then((data) => {
+      setAllProducts(data)
+      setLoading(false)
+    }).catch((err) => {
+      console.error(err)
+      setLoading(false)
+    })
+  }, [])
+
+  const product = allProducts.find((p) => p.id === id)
   const { addItem } = useCart()
   const [selectedSize, setSelectedSize] = useState("7cm")
   const [liked, setLiked] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
+
+  if (loading) {
+    return (
+      <PageLayout>
+        <div className="flex flex-col items-center justify-center gap-4 py-32 text-center">
+          <p className="text-lg font-bold text-muted-foreground animate-pulse">Loading product...</p>
+        </div>
+      </PageLayout>
+    )
+  }
 
   if (!product) {
     return (
@@ -48,8 +73,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     )
   }
 
-  const images = product.images || [product.image, product.image, product.image]
-  const related = products
+  const images = product.images && product.images.length > 0 ? product.images : [product.image, product.image, product.image]
+  const related = allProducts
     .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4)
 

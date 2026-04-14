@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import Image from "next/image"
 import { categories } from "@/lib/data"
 import type { Product } from "@/lib/data"
@@ -9,7 +9,9 @@ import {
     addProduct,
     updateProduct,
     deleteProduct,
+    uploadProductImage,
 } from "@/lib/dashboard-store"
+import { useToast } from "@/components/toast"
 import {
     Plus,
     Pencil,
@@ -41,6 +43,8 @@ const emptyForm: Omit<Product, "id"> = {
 
 export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([])
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
     const [search, setSearch] = useState("")
     const [filterCategory, setFilterCategory] = useState("All")
     const [showForm, setShowForm] = useState(false)
@@ -53,12 +57,23 @@ export default function ProductsPage() {
     const [isDragging, setIsDragging] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const cameraInputRef = useRef<HTMLInputElement>(null)
+    const toast = useToast()
+
+    const refresh = useCallback(async () => {
+        try {
+            const data = await getProducts()
+            setProducts(data)
+        } catch (err) {
+            console.error(err)
+            toast.error("Failed to load products")
+        } finally {
+            setLoading(false)
+        }
+    }, [toast])
 
     useEffect(() => {
-        setProducts(getProducts())
-    }, [])
-
-    const refresh = () => setProducts(getProducts())
+        refresh()
+    }, [refresh])
 
     const filtered = products.filter((p) => {
         const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase())
@@ -82,21 +97,37 @@ export default function ProductsPage() {
         setShowForm(true)
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!form.name || !form.price) return
-        if (editingId) {
-            updateProduct(editingId, form)
-        } else {
-            addProduct(form)
+        setSaving(true)
+        try {
+            if (editingId) {
+                await updateProduct(editingId, form)
+                toast.success("Product updated!")
+            } else {
+                await addProduct(form)
+                toast.success("Product added!")
+            }
+            setShowForm(false)
+            await refresh()
+        } catch (err) {
+            toast.error(editingId ? "Failed to update product" : "Failed to add product")
+            console.error(err)
+        } finally {
+            setSaving(false)
         }
-        setShowForm(false)
-        refresh()
     }
 
-    const handleDelete = (id: string) => {
-        deleteProduct(id)
-        setDeleteConfirm(null)
-        refresh()
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteProduct(id)
+            setDeleteConfirm(null)
+            toast.success("Product deleted")
+            await refresh()
+        } catch (err) {
+            toast.error("Failed to delete product")
+            console.error(err)
+        }
     }
 
     const addColor = () => {
@@ -121,39 +152,35 @@ export default function ProductsPage() {
         setForm({ ...form, sizes: form.sizes?.filter((x) => x !== s) })
     }
 
-    /* ── Image upload handler (multi-image) ── */
-    const handleImageFiles = (files: FileList | File[]) => {
+    /* ── Image upload handler (multi-image, uploads to Supabase Storage) ── */
+    const handleImageFiles = async (files: FileList | File[]) => {
         const fileArr = Array.from(files).filter((f) => f.type.startsWith("image/"))
         if (fileArr.length === 0) return
 
         const oversized = fileArr.filter((f) => f.size > 10 * 1024 * 1024)
         if (oversized.length > 0) {
-            alert(`${oversized.length} image(s) exceed 10 MB and were skipped`)
+            toast.error(`${oversized.length} image(s) exceed 10 MB and were skipped`)
         }
 
         const valid = fileArr.filter((f) => f.size <= 10 * 1024 * 1024)
         if (valid.length === 0) return
 
         setImageUploading(true)
-        let loaded = 0
-
-        valid.forEach((file) => {
-            const reader = new FileReader()
-            reader.onload = () => {
-                const dataUrl = reader.result as string
+        try {
+            for (const file of valid) {
+                const url = await uploadProductImage(file)
                 setForm((prev) => {
-                    const imgs = [...(prev.images || []), dataUrl]
-                    return { ...prev, images: imgs, image: prev.image === "/placeholder.svg?height=400&width=400" ? dataUrl : prev.image }
+                    const imgs = [...(prev.images || []), url]
+                    return { ...prev, images: imgs, image: prev.image === "/placeholder.svg?height=400&width=400" ? url : prev.image }
                 })
-                loaded++
-                if (loaded >= valid.length) setImageUploading(false)
             }
-            reader.onerror = () => {
-                loaded++
-                if (loaded >= valid.length) setImageUploading(false)
-            }
-            reader.readAsDataURL(file)
-        })
+            toast.success(`${valid.length} image(s) uploaded`)
+        } catch (err) {
+            toast.error("Image upload failed")
+            console.error(err)
+        } finally {
+            setImageUploading(false)
+        }
     }
 
     const removeImage = (idx: number) => {

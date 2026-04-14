@@ -9,17 +9,23 @@ export default function DashboardPage() {
     const [stats, setStats] = useState({ products: 0, discounts: 0, freebies: 0, orders: 0, pending: 0 })
 
     useEffect(() => {
-        const products = getProducts()
-        const discounts = getDiscounts()
-        const freebies = getFreebies()
-        const orders = getOrders()
-        setStats({
-            products: products.length,
-            discounts: discounts.filter((d) => d.active).length,
-            freebies: freebies.filter((f) => f.active).length,
-            orders: orders.length,
-            pending: orders.filter((o) => o.status === "pending" || o.status === "confirmed").length,
-        })
+        async function loadStats() {
+            try {
+                const [products, discounts, freebies, orders] = await Promise.all([
+                    getProducts(), getDiscounts(), getFreebies(), getOrders(),
+                ])
+                setStats({
+                    products: products.length,
+                    discounts: discounts.filter((d) => d.active).length,
+                    freebies: freebies.filter((f) => f.active).length,
+                    orders: orders.length,
+                    pending: orders.filter((o) => o.status === "pending" || o.status === "confirmed").length,
+                })
+            } catch (err) {
+                console.error("Failed to load stats:", err)
+            }
+        }
+        loadStats()
     }, [])
 
     const cards = [

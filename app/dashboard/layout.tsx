@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { ToastProvider } from "@/components/toast"
 import {
     Package,
     Tag,
@@ -124,6 +125,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         .find((item) => pathname === item.href)
 
     return (
+        <ToastProvider>
         <div className="flex min-h-screen" style={{ background: "#FFF5F7" }}>
             {/* Mobile overlay — smooth fade */}
             <div
@@ -300,5 +302,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </div>
             </main>
         </div>
+        </ToastProvider>
     )
 }

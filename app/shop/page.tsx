@@ -7,7 +7,9 @@ import { PageLayout } from "@/components/page-layout"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
-import { products, categories } from "@/lib/data"
+import { categories } from "@/lib/data"
+import type { Product } from "@/lib/data"
+import { getProducts } from "@/lib/dashboard-store"
 import { SlidersHorizontal, X, Search, ChevronDown, ChevronUp } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
@@ -67,8 +69,15 @@ function ShopContent() {
     )
   }
 
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+
+  /* Load products from Supabase */
+  useEffect(() => {
+    getProducts().then(setAllProducts).catch(console.error)
+  }, [])
+
   const filtered = useMemo(() => {
-    let result = products
+    let result = allProducts
 
     // Category
     if (activeCategory !== "All") {
@@ -104,7 +113,7 @@ function ShopContent() {
     }
 
     return result
-  }, [activeCategory, search, selectedColors, priceRange, sortBy])
+  }, [allProducts, activeCategory, search, selectedColors, priceRange, sortBy])
 
   const clearFilters = () => {
     setActiveCategory("All")
