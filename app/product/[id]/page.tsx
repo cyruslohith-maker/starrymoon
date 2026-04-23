@@ -77,6 +77,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const related = allProducts
     .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4)
+  const isOutOfStock = product.inStock === false || (product.quantity ?? 1) <= 0
 
   return (
     <PageLayout>
@@ -191,25 +192,37 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
             {/* Actions */}
             <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-              <Button
-                size="lg"
-                className="flex-1 rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90"
-                onClick={() => addItem(product, selectedSize)}
-              >
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                Add to Cart
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-full border-primary/30 text-sm text-secondary-foreground hover:bg-secondary"
-              >
-                <Link href={`/customize?base=${product.id}`}>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Customize This
-                </Link>
-              </Button>
+              {isOutOfStock ? (
+                <Button
+                  size="lg"
+                  className="flex-1 rounded-full bg-muted text-sm font-bold text-muted-foreground cursor-not-allowed opacity-60"
+                  disabled
+                >
+                  Sold Out
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    size="lg"
+                    className="flex-1 rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90"
+                    onClick={() => addItem(product, selectedSize)}
+                  >
+                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    Add to Cart
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="rounded-full border-primary/30 text-sm text-secondary-foreground hover:bg-secondary"
+                  >
+                    <Link href={`/customize?base=${product.id}`}>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Customize This
+                    </Link>
+                  </Button>
+                </>
+              )}
               <Button
                 variant="outline"
                 size="icon"

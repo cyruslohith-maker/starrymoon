@@ -10,7 +10,12 @@ import {
     updateProduct,
     deleteProduct,
     uploadProductImage,
+    createProductBackup,
+    getProductBackups,
+    restoreProductBackup,
+    deleteProductBackup,
 } from "@/lib/dashboard-store"
+import type { ProductBackup } from "@/lib/dashboard-store"
 import { useToast } from "@/components/toast"
 import {
     Plus,
@@ -23,6 +28,11 @@ import {
     Upload,
     Camera,
     Loader2,
+    Archive,
+    RotateCcw,
+    Download,
+    Calendar,
+    Clock,
 } from "lucide-react"
 
 const editableCategories = categories.filter((c) => c !== "All")
@@ -59,21 +69,83 @@ export default function ProductsPage() {
     const cameraInputRef = useRef<HTMLInputElement>(null)
     const toast = useToast()
 
+    /* ── Backup state ── */
+    const [backups, setBackups] = useState<ProductBackup[]>([])
+    const [showBackups, setShowBackups] = useState(false)
+    const [backupName, setBackupName] = useState("")
+    const [backupSaving, setBackupSaving] = useState(false)
+    const [backupRestoring, setBackupRestoring] = useState<string | null>(null)
+    const [backupDeleteConfirm, setBackupDeleteConfirm] = useState<string | null>(null)
+
+    /* Stable refresh — no toast in deps to avoid infinite loops */
     const refresh = useCallback(async () => {
         try {
             const data = await getProducts()
             setProducts(data)
         } catch (err) {
             console.error(err)
-            toast.error("Failed to load products")
         } finally {
             setLoading(false)
         }
-    }, [toast])
+    }, [])
+
+    const refreshBackups = useCallback(async () => {
+        try {
+            const data = await getProductBackups()
+            setBackups(data)
+        } catch (err) {
+            console.error(err)
+        }
+    }, [])
 
     useEffect(() => {
         refresh()
-    }, [refresh])
+        refreshBackups()
+    }, [refresh, refreshBackups])
+
+    /* ── Backup handlers ── */
+    const handleCreateBackup = async () => {
+        const name = backupName.trim()
+        if (!name) { toast.error("Enter a backup name"); return }
+        setBackupSaving(true)
+        try {
+            await createProductBackup(name)
+            toast.success(`Backup "${name}" created with ${products.length} products`)
+            setBackupName("")
+            await refreshBackups()
+        } catch (err) {
+            toast.error("Failed to create backup")
+            console.error(err)
+        } finally {
+            setBackupSaving(false)
+        }
+    }
+
+    const handleRestoreBackup = async (id: string) => {
+        setBackupRestoring(id)
+        try {
+            await restoreProductBackup(id)
+            toast.success("Products restored from backup!")
+            await refresh()
+        } catch (err) {
+            toast.error("Failed to restore backup")
+            console.error(err)
+        } finally {
+            setBackupRestoring(null)
+        }
+    }
+
+    const handleDeleteBackup = async (id: string) => {
+        try {
+            await deleteProductBackup(id)
+            setBackupDeleteConfirm(null)
+            toast.success("Backup deleted")
+            await refreshBackups()
+        } catch (err) {
+            toast.error("Failed to delete backup")
+            console.error(err)
+        }
+    }
 
     const filtered = products.filter((p) => {
         const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase())
@@ -119,14 +191,21 @@ export default function ProductsPage() {
     }
 
     const handleDelete = async (id: string) => {
+        /* Optimistic removal — remove from local state immediately */
+        setProducts((prev) => prev.filter((p) => p.id !== id))
+        setDeleteConfirm(null)
         try {
             await deleteProduct(id)
-            setDeleteConfirm(null)
             toast.success("Product deleted")
-            await refresh()
+            /* Background verify — re-fetch to confirm server state */
+            const freshData = await getProducts()
+            setProducts(freshData)
         } catch (err) {
-            toast.error("Failed to delete product")
+            toast.error("Failed to delete product — refreshing list")
             console.error(err)
+            /* Rollback: re-fetch the real state on failure */
+            const freshData = await getProducts()
+            setProducts(freshData)
         }
     }
 
@@ -205,14 +284,148 @@ export default function ProductsPage() {
                     <h1 className="font-serif text-xl font-bold text-foreground sm:text-2xl">Products</h1>
                     <p className="text-xs text-muted-foreground">{products.length} products total</p>
                 </div>
-                <button
-                    onClick={openAdd}
-                    className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"
-                >
-                    <Plus className="h-4 w-4" />
-                    Add Product
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowBackups(!showBackups)}
+                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-colors ${
+                            showBackups
+                                ? "bg-primary/10 text-primary border border-primary/30"
+                                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        }`}
+                    >
+                        <Archive className="h-4 w-4" />
+                        Backups
+                        {backups.length > 0 && (
+                            <span className="flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                                {backups.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={openAdd}
+                        className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Add Product
+                    </button>
+                </div>
             </div>
+
+            {/* ── Backup Management Panel ── */}
+            {showBackups && (
+                <div className="mb-6 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.03] to-pink-50/50 p-4 sm:p-6">
+                    <div className="mb-4 flex items-center gap-2">
+                        <Archive className="h-5 w-5 text-primary" />
+                        <h2 className="font-serif text-sm font-bold text-foreground sm:text-base">Product Backups</h2>
+                        <span className="ml-auto text-[10px] text-muted-foreground">Save your entire catalogue and restore later</span>
+                    </div>
+
+                    {/* Create backup */}
+                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end">
+                        <div className="flex-1">
+                            <label className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                Backup Name
+                            </label>
+                            <input
+                                type="text"
+                                value={backupName}
+                                onChange={(e) => setBackupName(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleCreateBackup()}
+                                placeholder="e.g. Spring 2026 Collection"
+                                className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-primary"
+                            />
+                        </div>
+                        <button
+                            onClick={handleCreateBackup}
+                            disabled={backupSaving || !backupName.trim()}
+                            className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {backupSaving ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                                <Download className="h-3.5 w-3.5" />
+                            )}
+                            {backupSaving ? "Saving..." : `Save Backup (${products.length} products)`}
+                        </button>
+                    </div>
+
+                    {/* Backup list */}
+                    {backups.length === 0 ? (
+                        <div className="flex flex-col items-center gap-2 py-6 text-center">
+                            <Archive className="h-8 w-8 text-muted-foreground/30" />
+                            <p className="text-xs text-muted-foreground">No backups yet. Create one to save your current product catalogue.</p>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-2">
+                            {backups.map((b) => {
+                                const d = new Date(b.createdAt)
+                                const dateStr = d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                                const timeStr = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+                                return (
+                                    <div key={b.id} className="relative flex flex-col gap-2 rounded-xl border border-border bg-card p-3 transition-all hover:shadow-sm sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+                                        <div className="flex-1">
+                                            <p className="text-sm font-bold text-foreground">{b.name}</p>
+                                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground sm:gap-3">
+                                                <span className="flex items-center gap-1">
+                                                    <Package className="h-3 w-3" />
+                                                    {b.productCount} products
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <Calendar className="h-3 w-3" />
+                                                    {dateStr}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <Clock className="h-3 w-3" />
+                                                    {timeStr}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleRestoreBackup(b.id)}
+                                                disabled={backupRestoring === b.id}
+                                                className="flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-2 text-[11px] font-bold text-emerald-600 transition-colors hover:bg-emerald-500/20 disabled:opacity-50"
+                                            >
+                                                {backupRestoring === b.id ? (
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                ) : (
+                                                    <RotateCcw className="h-3 w-3" />
+                                                )}
+                                                {backupRestoring === b.id ? "Restoring..." : "Restore"}
+                                            </button>
+                                            <button
+                                                onClick={() => setBackupDeleteConfirm(b.id)}
+                                                className="flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-2 text-[11px] font-bold text-destructive transition-colors hover:bg-destructive/20"
+                                            >
+                                                <Trash2 className="h-3 w-3" />
+                                            </button>
+                                        </div>
+
+                                        {/* Delete confirmation overlay */}
+                                        {backupDeleteConfirm === b.id && (
+                                            <div className="absolute inset-0 flex items-center justify-center gap-3 rounded-xl bg-card/95 backdrop-blur-sm">
+                                                <p className="text-xs font-bold text-foreground">Delete &ldquo;{b.name}&rdquo;?</p>
+                                                <button
+                                                    onClick={() => handleDeleteBackup(b.id)}
+                                                    className="rounded-lg bg-destructive px-3 py-1.5 text-[11px] font-bold text-white"
+                                                >
+                                                    Delete
+                                                </button>
+                                                <button
+                                                    onClick={() => setBackupDeleteConfirm(null)}
+                                                    className="rounded-lg bg-secondary px-3 py-1.5 text-[11px] font-bold text-secondary-foreground"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Filters */}
             <div className="mb-4 flex flex-col gap-2 sm:mb-6 sm:flex-row sm:gap-3">
@@ -250,13 +463,20 @@ export default function ProductsPage() {
                                 src={p.image}
                                 alt={p.name}
                                 fill
-                                className="object-cover"
+                                className={`object-cover ${(p.inStock === false || (p.quantity ?? 0) <= 0) ? "opacity-50 grayscale-[30%]" : ""}`}
                                 sizes="(max-width: 640px) 100vw, 25vw"
                             />
                             {p.tag && (
                                 <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase text-primary-foreground">
                                     {p.tag}
                                 </span>
+                            )}
+                            {(p.inStock === false || (p.quantity ?? 0) <= 0) && (
+                                <div className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-gradient-to-t from-red-900/70 to-transparent pb-2 pt-6">
+                                    <span className="rounded-full bg-red-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                                        Out of Stock
+                                    </span>
+                                </div>
                             )}
                         </div>
 

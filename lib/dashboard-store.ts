@@ -97,22 +97,97 @@ export async function getProducts(): Promise<Product[]> {
         console.error("getProducts error:", error)
         return []
     }
-    if (!data || data.length === 0) {
-        // Auto-seed on first load
-        await seedProducts_()
-        const { data: seeded } = await supabase().from("products").select("*").order("created_at", { ascending: false })
-        return (seeded || []).map(rowToProduct)
-    }
-    return data.map(rowToProduct)
+    return (data || []).map(rowToProduct)
 }
 
-async function seedProducts_() {
+/** Manually seed the database with default products (only called from dashboard) */
+export async function seedDefaultProducts(): Promise<void> {
     const rows = seedProducts.map((p) => ({
         ...productToRow({ ...p, quantity: 10 }),
         created_at: new Date().toISOString(),
     }))
     const { error } = await supabase().from("products").insert(rows)
-    if (error) console.error("Seed products error:", error)
+    if (error) throw new Error(error.message)
+}
+
+// ─── Product Backups ─────────────────────────────
+
+export interface ProductBackup {
+    id: string
+    name: string
+    productCount: number
+    products: Product[]
+    createdAt: string
+}
+
+export async function createProductBackup(name: string): Promise<ProductBackup> {
+    const products = await getProducts()
+    const id = generateId()
+    const now = new Date().toISOString()
+
+    const { error } = await supabase().from("product_backups").insert({
+        id,
+        name,
+        product_count: products.length,
+        products_data: products,
+        created_at: now,
+    })
+
+    if (error) throw new Error(error.message)
+
+    return { id, name, productCount: products.length, products, createdAt: now }
+}
+
+export async function getProductBackups(): Promise<ProductBackup[]> {
+    const { data, error } = await supabase()
+        .from("product_backups")
+        .select("*")
+        .order("created_at", { ascending: false })
+
+    if (error) {
+        console.error("getProductBackups error:", error)
+        return []
+    }
+
+    return (data || []).map((row: Record<string, unknown>) => ({
+        id: row.id as string,
+        name: row.name as string,
+        productCount: (row.product_count as number) || 0,
+        products: (row.products_data as Product[]) || [],
+        createdAt: (row.created_at as string) || new Date().toISOString(),
+    }))
+}
+
+export async function restoreProductBackup(backupId: string): Promise<void> {
+    // Fetch the backup
+    const { data, error: fetchError } = await supabase()
+        .from("product_backups")
+        .select("products_data")
+        .eq("id", backupId)
+        .single()
+
+    if (fetchError || !data) throw new Error(fetchError?.message || "Backup not found")
+
+    const backupProducts = data.products_data as Product[]
+
+    // Clear current products
+    const { error: deleteError } = await supabase().from("products").delete().neq("id", "")
+    if (deleteError) throw new Error(deleteError.message)
+
+    // Re-insert from backup
+    if (backupProducts.length > 0) {
+        const rows = backupProducts.map((p) => ({
+            ...productToRow(p),
+            created_at: new Date().toISOString(),
+        }))
+        const { error: insertError } = await supabase().from("products").insert(rows)
+        if (insertError) throw new Error(insertError.message)
+    }
+}
+
+export async function deleteProductBackup(id: string): Promise<void> {
+    const { error } = await supabase().from("product_backups").delete().eq("id", id)
+    if (error) throw new Error(error.message)
 }
 
 export async function addProduct(product: Omit<Product, "id">): Promise<Product> {

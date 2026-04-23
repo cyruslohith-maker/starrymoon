@@ -18,6 +18,8 @@ export function ProductCard({ product }: { product: Product }) {
     getDiscountedPrice(product).then(setDiscountedPrice).catch(() => {})
   }, [product])
 
+  const isOutOfStock = product.inStock === false || (product.quantity ?? 1) <= 0
+
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
       {/* Image */}
@@ -26,10 +28,19 @@ export function ProductCard({ product }: { product: Product }) {
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className={`object-cover transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? "opacity-60 grayscale-[30%]" : ""}`}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           loading="lazy"
         />
+
+        {/* Out of Stock overlay badge */}
+        {isOutOfStock && (
+          <div className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-gradient-to-t from-black/70 to-transparent pb-3 pt-8">
+            <span className="rounded-full bg-red-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-lg sm:text-xs">
+              Out of Stock
+            </span>
+          </div>
+        )}
 
         {/* Tag */}
         {product.tag && (
@@ -84,24 +95,37 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="mt-auto flex flex-col gap-1.5 pt-1 sm:flex-row sm:items-center sm:gap-2">
           <Button
             size="sm"
-            className="flex-1 rounded-full bg-primary text-[10px] text-primary-foreground hover:bg-primary/90 sm:text-xs"
-            onClick={() => addItem(product)}
+            className={`flex-1 rounded-full text-[10px] sm:text-xs ${
+              isOutOfStock
+                ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+            }`}
+            onClick={() => !isOutOfStock && addItem(product)}
+            disabled={isOutOfStock}
           >
-            <Plus className="mr-1 h-3 w-3" />
-            <span className="hidden sm:inline">Quick Add</span>
-            <span className="sm:hidden">Add</span>
+            {isOutOfStock ? (
+              <>Sold Out</>
+            ) : (
+              <>
+                <Plus className="mr-1 h-3 w-3" />
+                <span className="hidden sm:inline">Quick Add</span>
+                <span className="sm:hidden">Add</span>
+              </>
+            )}
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="hidden rounded-full border-primary/30 text-xs text-secondary-foreground hover:bg-secondary sm:flex"
-          >
-            <Link href={`/customize?base=${product.id}`}>
-              <Sparkles className="mr-1 h-3 w-3" />
-              Customize
-            </Link>
-          </Button>
+          {!isOutOfStock && (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="hidden rounded-full border-primary/30 text-xs text-secondary-foreground hover:bg-secondary sm:flex"
+            >
+              <Link href={`/customize?base=${product.id}`}>
+                <Sparkles className="mr-1 h-3 w-3" />
+                Customize
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </article>
