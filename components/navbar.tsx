@@ -150,7 +150,7 @@ export function Navbar() {
           {isStaff && (
             <Link
               href="/dashboard"
-              className="group relative mr-1 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-pink-400 px-3 py-1.5 text-[11px] font-bold text-white shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30 hover:brightness-110 sm:px-4 sm:py-2 sm:text-xs"
+              className="group relative mr-1 hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-primary to-pink-400 px-3 py-1.5 text-[11px] font-bold text-white shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30 hover:brightness-110 sm:flex sm:px-4 sm:py-2 sm:text-xs"
               title="Go to Dashboard"
             >
               <LayoutDashboard className="h-3.5 w-3.5" />
