@@ -76,6 +76,7 @@ export default function ProductsPage() {
     const [variantUploading, setVariantUploading] = useState(false)
     const variantFileRef = useRef<HTMLInputElement>(null)
     const [dragVariantIdx, setDragVariantIdx] = useState<number | null>(null)
+    const [uploadMode, setUploadMode] = useState<"normal" | "multi">("normal")
 
     /* ── Backup state ── */
     const [backups, setBackups] = useState<ProductBackup[]>([])
@@ -166,6 +167,8 @@ export default function ProductsPage() {
         setForm(emptyForm)
         setColorInput("")
         setSizeInput("")
+        setUploadMode("normal")
+        setVariantLabel("")
         setShowForm(true)
     }
 
@@ -174,18 +177,31 @@ export default function ProductsPage() {
         setForm({ ...p })
         setColorInput("")
         setSizeInput("")
+        setUploadMode(p.variants && p.variants.length > 0 ? "multi" : "normal")
+        setVariantLabel("")
         setShowForm(true)
     }
 
     const handleSave = async () => {
         if (!form.name || !form.price) return
+
+        /* Multi mode: first variant image becomes main image */
+        let saveForm = { ...form }
+        if (uploadMode === "multi") {
+            if (!saveForm.variants || saveForm.variants.length === 0) {
+                toast.error("Add at least one variant in Multi Upload mode")
+                return
+            }
+            saveForm.image = saveForm.variants[0].image
+            saveForm.images = saveForm.variants.map(v => v.image)
+        }
         setSaving(true)
         try {
             if (editingId) {
-                await updateProduct(editingId, form)
+                await updateProduct(editingId, saveForm)
                 toast.success("Product updated!")
             } else {
-                await addProduct(form)
+                await addProduct(saveForm)
                 toast.success("Product added!")
             }
             setShowForm(false)
@@ -610,6 +626,32 @@ export default function ProductsPage() {
                             </button>
                         </div>
 
+                        {/* Upload mode toggle */}
+                        <div className="mb-5 flex items-center gap-1 rounded-xl bg-secondary/50 p-1">
+                            <button
+                                type="button"
+                                onClick={() => setUploadMode("normal")}
+                                className={`flex-1 rounded-lg px-3 py-2 text-xs font-bold transition-all ${uploadMode === "normal"
+                                    ? "bg-card text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                            >
+                                <ImageIcon className="mr-1.5 inline h-3 w-3" />
+                                Normal Upload
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setUploadMode("multi")}
+                                className={`flex-1 rounded-lg px-3 py-2 text-xs font-bold transition-all ${uploadMode === "multi"
+                                    ? "bg-card text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                            >
+                                <Package className="mr-1.5 inline h-3 w-3" />
+                                Multi Upload
+                            </button>
+                        </div>
+
                         <div className="flex flex-col gap-4">
                             {/* Name */}
                             <div>
@@ -675,7 +717,8 @@ export default function ProductsPage() {
                                 </div>
                             </div>
 
-                            {/* Image Upload (multi-image) */}
+                            {/* Image Upload (multi-image) — only in normal mode */}
+                            {uploadMode === "normal" && (
                             <div>
                                 <label className="mb-1 flex items-center justify-between text-xs font-bold text-muted-foreground">
                                     <span>
@@ -804,6 +847,7 @@ export default function ProductsPage() {
                                     <p className="mt-0.5 text-[9px] text-muted-foreground">Press Enter to add</p>
                                 </details>
                             </div>
+                            )}
 
                             {/* Description */}
                             <div>
@@ -888,7 +932,8 @@ export default function ProductsPage() {
                                 <span className="text-sm font-semibold text-foreground">In Stock</span>
                             </label>
 
-                            {/* ── Product Variants (Multi-upload) ── */}
+                            {/* ── Product Variants (Multi-upload) — only in multi mode ── */}
+                            {uploadMode === "multi" && (
                             <div className="rounded-xl border border-dashed border-primary/30 bg-primary/[0.02] p-4">
                                 <label className="mb-2 flex items-center justify-between text-xs font-bold text-muted-foreground">
                                     <span>
@@ -985,6 +1030,7 @@ export default function ProductsPage() {
                                     }}
                                 />
                             </div>
+                            )}
                         </div>
 
                         {/* Actions */}
