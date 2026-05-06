@@ -189,6 +189,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+  transform: translateX(-4%);
 }
 
 /* Hide scrollbar but keep scroll */
