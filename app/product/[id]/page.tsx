@@ -115,7 +115,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 src={images[selectedImage]}
                 alt={product.name}
                 fill
-                className="object-cover"
+                className="object-contain"
                 priority
               />
               {product.tag && (
@@ -134,7 +134,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     selectedImage === i ? "border-primary" : "border-border hover:border-primary/50"
                   }`}
                 >
-                  <Image src={img} alt={`${product.name} view ${i + 1}`} fill className="object-cover" />
+                  <Image src={img} alt={`${product.name} view ${i + 1}`} fill className="object-contain" />
                 </button>
               ))}
             </div>

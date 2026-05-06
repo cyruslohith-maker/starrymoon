@@ -535,7 +535,7 @@ export default function ProductsPage() {
                                 src={p.image}
                                 alt={p.name}
                                 fill
-                                className={`object-cover ${(p.inStock === false || (p.quantity ?? 0) <= 0) ? "opacity-50 grayscale-[30%]" : ""}`}
+                                className={`object-contain ${(p.inStock === false || (p.quantity ?? 0) <= 0) ? "opacity-50 grayscale-[30%]" : ""}`}
                                 sizes="(max-width: 640px) 100vw, 25vw"
                             />
                             {p.tag && (
