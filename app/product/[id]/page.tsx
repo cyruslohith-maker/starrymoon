@@ -181,15 +181,22 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       </span>
                     </button>
                   ))}
-                  {/* Show all / default option */}
+                  {/* Main product option */}
                   <button
                     onClick={() => { setSelectedVariant(null); setSelectedImage(0) }}
-                    className={`rounded-xl border-2 px-3 py-2 text-xs font-semibold transition-all ${selectedVariant === null
-                      ? "border-primary bg-primary/5 text-primary shadow-sm shadow-primary/10"
-                      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    className={`group flex items-center gap-2 rounded-xl border-2 px-2.5 py-2 transition-all ${selectedVariant === null
+                      ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                      : "border-border hover:border-primary/40"
                     }`}
                   >
-                    Default
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                      <Image src={product.image} alt={product.name} fill className="object-cover" sizes="40px" />
+                    </div>
+                    <span className={`text-xs font-semibold ${
+                      selectedVariant === null ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                    }`}>
+                      {product.name}
+                    </span>
                   </button>
                 </div>
               </div>
