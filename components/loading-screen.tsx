@@ -1,14 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 export function LoadingScreen() {
     const [visible, setVisible] = useState(true)
     const [fadeOut, setFadeOut] = useState(false)
-    const [progress, setProgress] = useState(0)
+    const videoRef = useRef<HTMLVideoElement>(null)
 
     /* Hide body content while loading */
     useEffect(() => {
+        // Immediately hide overflow + set bg to prevent flash
         document.documentElement.style.overflow = "hidden"
         document.body.style.overflow = "hidden"
 
@@ -18,37 +19,33 @@ export function LoadingScreen() {
         }
     }, [])
 
-    /* Progress bar + auto-dismiss */
     useEffect(() => {
-        const interval = setInterval(() => {
-            setProgress((prev) => {
-                if (prev >= 100) {
-                    clearInterval(interval)
-                    return 100
-                }
-                return prev + 2
-            })
-        }, 40)
+        const video = videoRef.current
+        if (!video) return
 
-        return () => clearInterval(interval)
-    }, [])
-
-    /* When progress hits 100, start fade out */
-    useEffect(() => {
-        if (progress >= 100) {
-            const timeout = setTimeout(() => {
-                setFadeOut(true)
-                setTimeout(() => {
-                    setVisible(false)
-                    document.documentElement.style.overflow = ""
-                    document.body.style.overflow = ""
-                    document.body.classList.add("app-loaded")
-                    document.body.style.background = ""
-                }, 600)
-            }, 300)
-            return () => clearTimeout(timeout)
+        const dismiss = () => {
+            setFadeOut(true)
+            setTimeout(() => {
+                setVisible(false)
+                // Restore scrolling and show content
+                document.documentElement.style.overflow = ""
+                document.body.style.overflow = ""
+                document.body.classList.add("app-loaded")
+                document.body.style.background = ""
+            }, 600)
         }
-    }, [progress])
+
+        const handleEnded = () => dismiss()
+        video.addEventListener("ended", handleEnded)
+
+        // Fallback: auto-dismiss after 5s
+        const fallback = setTimeout(dismiss, 5000)
+
+        return () => {
+            video.removeEventListener("ended", handleEnded)
+            clearTimeout(fallback)
+        }
+    }, [])
 
     if (!visible) return null
 
@@ -58,41 +55,14 @@ export function LoadingScreen() {
             aria-label="Loading"
             role="status"
         >
-            {/* Floating sparkles */}
-            <div className="loading-sparkles" aria-hidden="true">
-                <span className="sparkle sparkle-1">✦</span>
-                <span className="sparkle sparkle-2">♡</span>
-                <span className="sparkle sparkle-3">✧</span>
-                <span className="sparkle sparkle-4">♡</span>
-                <span className="sparkle sparkle-5">✦</span>
-                <span className="sparkle sparkle-6">✧</span>
-                <span className="sparkle sparkle-7">♡</span>
-                <span className="sparkle sparkle-8">✦</span>
-            </div>
-
-            {/* Mascot */}
-            <div className="loading-mascot">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    src="/loading-mascot.png"
-                    alt="Starrymoon mascot"
-                    className="loading-mascot-img"
-                    draggable={false}
-                />
-            </div>
-
-            {/* Brand name */}
-            <p className="loading-brand">Starrymoon</p>
-
-            {/* Progress bar */}
-            <div className="loading-bar-track">
-                <div
-                    className="loading-bar-fill"
-                    style={{ width: `${progress}%` }}
-                />
-            </div>
-
-            <p className="loading-tagline">Handcrafted with love ♡</p>
+            <video
+                ref={videoRef}
+                src="/loading-mascot.mp4?v=2"
+                autoPlay
+                muted
+                playsInline
+                className="loading-video"
+            />
         </div>
     )
 }
