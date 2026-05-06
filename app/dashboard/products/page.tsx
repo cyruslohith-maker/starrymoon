@@ -77,6 +77,7 @@ export default function ProductsPage() {
     const variantFileRef = useRef<HTMLInputElement>(null)
     const [dragVariantIdx, setDragVariantIdx] = useState<number | null>(null)
     const [uploadMode, setUploadMode] = useState<"normal" | "multi">("normal")
+    const [editingVariantIdx, setEditingVariantIdx] = useState<number | null>(null)
 
     /* ── Backup state ── */
     const [backups, setBackups] = useState<ProductBackup[]>([])
@@ -301,27 +302,35 @@ export default function ProductsPage() {
     }
 
     /* ── Variant handlers ── */
-    const handleVariantImageFile = async (file: File) => {
-        if (!file.type.startsWith("image/")) return
-        if (file.size > 10 * 1024 * 1024) { toast.error("Image exceeds 10 MB"); return }
-        const label = variantLabel.trim()
-        if (!label) { toast.error("Enter a variant label first (e.g. Rose Pink)"); return }
+    const handleVariantFiles = async (files: FileList | File[]) => {
+        const fileArr = Array.from(files).filter((f) => f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024)
+        if (fileArr.length === 0) return
 
         setVariantUploading(true)
+        const startIdx = (form.variants || []).length
         try {
-            const url = await uploadProductImage(file)
-            setForm((prev) => ({
-                ...prev,
-                variants: [...(prev.variants || []), { label, image: url }],
-            }))
-            setVariantLabel("")
-            toast.success(`Variant "${label}" added`)
+            for (let i = 0; i < fileArr.length; i++) {
+                const url = await uploadProductImage(fileArr[i])
+                setForm((prev) => ({
+                    ...prev,
+                    variants: [...(prev.variants || []), { label: `Variant ${startIdx + i + 1}`, image: url }],
+                }))
+            }
+            toast.success(`${fileArr.length} variant image${fileArr.length !== 1 ? "s" : ""} uploaded — click each to rename`)
         } catch (err) {
-            toast.error("Variant image upload failed")
+            toast.error("Some variant images failed to upload")
             console.error(err)
         } finally {
             setVariantUploading(false)
         }
+    }
+
+    const renameVariant = (idx: number, newLabel: string) => {
+        setForm((prev) => {
+            const arr = [...(prev.variants || [])]
+            if (arr[idx]) arr[idx] = { ...arr[idx], label: newLabel }
+            return { ...prev, variants: arr }
+        })
     }
 
     const removeVariant = (idx: number) => {
@@ -945,7 +954,7 @@ export default function ProductsPage() {
                                     </span>
                                 </label>
                                 <p className="mb-3 text-[10px] leading-relaxed text-muted-foreground">
-                                    Add different versions of this product (e.g. colors, styles). Customers will see these as selectable options.
+                                    Select multiple images at once, then click each name to rename it.
                                 </p>
 
                                 {/* Existing variants list */}
@@ -976,7 +985,37 @@ export default function ProductsPage() {
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                                     <img src={v.image} alt={v.label} className="h-full w-full object-cover" />
                                                 </div>
-                                                <span className="flex-1 truncate text-xs font-semibold text-foreground">{v.label}</span>
+                                                {/* Editable label */}
+                                                {editingVariantIdx === idx ? (
+                                                    <input
+                                                        type="text"
+                                                        autoFocus
+                                                        defaultValue={v.label}
+                                                        onBlur={(e) => {
+                                                            const val = e.target.value.trim()
+                                                            if (val) renameVariant(idx, val)
+                                                            setEditingVariantIdx(null)
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter") {
+                                                                const val = (e.target as HTMLInputElement).value.trim()
+                                                                if (val) renameVariant(idx, val)
+                                                                setEditingVariantIdx(null)
+                                                            }
+                                                        }}
+                                                        className="flex-1 rounded-md border border-primary bg-background px-2 py-1 text-xs font-semibold text-foreground outline-none"
+                                                    />
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditingVariantIdx(idx)}
+                                                        className="flex flex-1 items-center gap-1 truncate text-left text-xs font-semibold text-foreground hover:text-primary transition-colors"
+                                                        title="Click to rename"
+                                                    >
+                                                        {v.label}
+                                                        <Pencil className="h-2.5 w-2.5 shrink-0 text-muted-foreground/40" />
+                                                    </button>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={() => removeVariant(idx)}
@@ -990,42 +1029,35 @@ export default function ProductsPage() {
                                     </div>
                                 )}
 
-                                {/* Add new variant */}
-                                <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                                    <div className="flex-1">
-                                        <label className="mb-1 block text-[10px] font-bold text-muted-foreground">Variant Label</label>
-                                        <input
-                                            type="text"
-                                            value={variantLabel}
-                                            onChange={(e) => setVariantLabel(e.target.value)}
-                                            placeholder="e.g. Rose Pink, Ocean Blue"
-                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => variantFileRef.current?.click()}
-                                        disabled={variantUploading || !variantLabel.trim()}
-                                        className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-[11px] font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        {variantUploading ? (
-                                            <Loader2 className="h-3 w-3 animate-spin" />
-                                        ) : (
-                                            <Upload className="h-3 w-3" />
-                                        )}
-                                        {variantUploading ? "Uploading..." : "Upload Image"}
-                                    </button>
-                                </div>
+                                {/* Upload button */}
+                                <button
+                                    type="button"
+                                    onClick={() => variantFileRef.current?.click()}
+                                    disabled={variantUploading}
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-4 text-xs font-bold text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground disabled:opacity-50"
+                                >
+                                    {variantUploading ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                            Uploading images...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="h-4 w-4" />
+                                            Select Images (multiple)
+                                        </>
+                                    )}
+                                </button>
 
-                                {/* Hidden file input for variant image */}
+                                {/* Hidden multi-file input */}
                                 <input
                                     ref={variantFileRef}
                                     type="file"
                                     accept="image/*"
+                                    multiple
                                     className="hidden"
                                     onChange={(e) => {
-                                        const file = e.target.files?.[0]
-                                        if (file) handleVariantImageFile(file)
+                                        if (e.target.files?.length) handleVariantFiles(e.target.files)
                                         e.target.value = ""
                                     }}
                                 />
