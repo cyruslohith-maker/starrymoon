@@ -1,3 +1,9 @@
+export interface ProductVariant {
+  label: string
+  image: string
+  price?: number
+}
+
 export interface Product {
   id: string
   name: string
@@ -11,6 +17,7 @@ export interface Product {
   sizes?: string[]
   inStock?: boolean
   quantity?: number
+  variants?: ProductVariant[]
 }
 
 export const categories = [

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import Image from "next/image"
 import { categories } from "@/lib/data"
-import type { Product } from "@/lib/data"
+import type { Product, ProductVariant } from "@/lib/data"
 import {
     getProducts,
     addProduct,
@@ -32,6 +32,7 @@ import {
     RotateCcw,
     Download,
     Calendar,
+    GripVertical,
     Clock,
 } from "lucide-react"
 
@@ -49,6 +50,7 @@ const emptyForm: Omit<Product, "id"> = {
     sizes: [],
     inStock: true,
     quantity: 10,
+    variants: [],
 }
 
 export default function ProductsPage() {
@@ -68,6 +70,12 @@ export default function ProductsPage() {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const cameraInputRef = useRef<HTMLInputElement>(null)
     const toast = useToast()
+
+    /* ── Variant state ── */
+    const [variantLabel, setVariantLabel] = useState("")
+    const [variantUploading, setVariantUploading] = useState(false)
+    const variantFileRef = useRef<HTMLInputElement>(null)
+    const [dragVariantIdx, setDragVariantIdx] = useState<number | null>(null)
 
     /* ── Backup state ── */
     const [backups, setBackups] = useState<ProductBackup[]>([])
@@ -274,6 +282,46 @@ export default function ProductsPage() {
         e.preventDefault()
         setIsDragging(false)
         if (e.dataTransfer.files?.length) handleImageFiles(e.dataTransfer.files)
+    }
+
+    /* ── Variant handlers ── */
+    const handleVariantImageFile = async (file: File) => {
+        if (!file.type.startsWith("image/")) return
+        if (file.size > 10 * 1024 * 1024) { toast.error("Image exceeds 10 MB"); return }
+        const label = variantLabel.trim()
+        if (!label) { toast.error("Enter a variant label first (e.g. Rose Pink)"); return }
+
+        setVariantUploading(true)
+        try {
+            const url = await uploadProductImage(file)
+            setForm((prev) => ({
+                ...prev,
+                variants: [...(prev.variants || []), { label, image: url }],
+            }))
+            setVariantLabel("")
+            toast.success(`Variant "${label}" added`)
+        } catch (err) {
+            toast.error("Variant image upload failed")
+            console.error(err)
+        } finally {
+            setVariantUploading(false)
+        }
+    }
+
+    const removeVariant = (idx: number) => {
+        setForm((prev) => ({
+            ...prev,
+            variants: (prev.variants || []).filter((_, i) => i !== idx),
+        }))
+    }
+
+    const moveVariant = (from: number, to: number) => {
+        setForm((prev) => {
+            const arr = [...(prev.variants || [])]
+            const [item] = arr.splice(from, 1)
+            arr.splice(to, 0, item)
+            return { ...prev, variants: arr }
+        })
     }
 
     return (
@@ -841,6 +889,105 @@ export default function ProductsPage() {
                                 />
                                 <span className="text-sm font-semibold text-foreground">In Stock</span>
                             </label>
+
+                            {/* ── Product Variants (Multi-upload) ── */}
+                            <div className="rounded-xl border border-dashed border-primary/30 bg-primary/[0.02] p-4">
+                                <label className="mb-2 flex items-center justify-between text-xs font-bold text-muted-foreground">
+                                    <span>
+                                        <Package className="mr-1 inline h-3 w-3" />
+                                        Product Variants
+                                    </span>
+                                    <span className="font-normal text-[10px]">
+                                        {(form.variants || []).length} variant{(form.variants || []).length !== 1 ? "s" : ""}
+                                    </span>
+                                </label>
+                                <p className="mb-3 text-[10px] leading-relaxed text-muted-foreground">
+                                    Add different versions of this product (e.g. colors, styles). Customers will see these as selectable options — like picking a color on Amazon.
+                                </p>
+
+                                {/* Existing variants list */}
+                                {(form.variants || []).length > 0 && (
+                                    <div className="mb-3 flex flex-col gap-1.5">
+                                        {(form.variants || []).map((v, idx) => (
+                                            <div
+                                                key={idx}
+                                                draggable
+                                                onDragStart={() => setDragVariantIdx(idx)}
+                                                onDragOver={(e) => e.preventDefault()}
+                                                onDrop={(e) => {
+                                                    e.preventDefault()
+                                                    if (dragVariantIdx !== null && dragVariantIdx !== idx) {
+                                                        moveVariant(dragVariantIdx, idx)
+                                                    }
+                                                    setDragVariantIdx(null)
+                                                }}
+                                                onDragEnd={() => setDragVariantIdx(null)}
+                                                className={`flex items-center gap-2 rounded-lg border bg-card p-2 transition-all ${
+                                                    dragVariantIdx === idx ? "border-primary opacity-50" : "border-border"
+                                                }`}
+                                            >
+                                                <GripVertical className="h-3.5 w-3.5 shrink-0 cursor-grab text-muted-foreground/40 active:cursor-grabbing" />
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary">
+                                                    {idx + 1}
+                                                </span>
+                                                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={v.image} alt={v.label} className="h-full w-full object-cover" />
+                                                </div>
+                                                <span className="flex-1 truncate text-xs font-semibold text-foreground">{v.label}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeVariant(idx)}
+                                                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                                    aria-label={`Remove variant ${v.label}`}
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Add new variant */}
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                                    <div className="flex-1">
+                                        <label className="mb-1 block text-[10px] font-bold text-muted-foreground">Variant Label</label>
+                                        <input
+                                            type="text"
+                                            value={variantLabel}
+                                            onChange={(e) => setVariantLabel(e.target.value)}
+                                            placeholder="e.g. Rose Pink, Ocean Blue"
+                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => variantFileRef.current?.click()}
+                                        disabled={variantUploading || !variantLabel.trim()}
+                                        className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-[11px] font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {variantUploading ? (
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                            <Upload className="h-3 w-3" />
+                                        )}
+                                        {variantUploading ? "Uploading..." : "Upload Image"}
+                                    </button>
+                                </div>
+
+                                {/* Hidden file input for variant image */}
+                                <input
+                                    ref={variantFileRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) handleVariantImageFile(file)
+                                        e.target.value = ""
+                                    }}
+                                />
+                            </div>
                         </div>
 
                         {/* Actions */}

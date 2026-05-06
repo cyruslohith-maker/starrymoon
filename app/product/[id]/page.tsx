@@ -46,6 +46,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [selectedSize, setSelectedSize] = useState("7cm")
   const [liked, setLiked] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedVariant, setSelectedVariant] = useState<number | null>(null)
+
+  const hasVariants = product?.variants && product.variants.length > 0
 
   if (loading) {
     return (
@@ -73,11 +76,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     )
   }
 
-  const images = product.images && product.images.length > 0 ? product.images : [product.image, product.image, product.image]
+  const images = selectedVariant !== null && hasVariants
+    ? [product!.variants![selectedVariant].image]
+    : product!.images && product!.images.length > 0 ? product!.images : [product!.image]
   const related = allProducts
-    .filter((p) => p.category === product.category && p.id !== product.id)
+    .filter((p) => p.category === product!.category && p.id !== product!.id)
     .slice(0, 4)
-  const isOutOfStock = product.inStock === false || (product.quantity ?? 1) <= 0
+  const isOutOfStock = product!.inStock === false || (product!.quantity ?? 1) <= 0
+  const displayName = selectedVariant !== null && hasVariants
+    ? `${product!.name} — ${product!.variants![selectedVariant].label}`
+    : product!.name
+  const displayPrice = selectedVariant !== null && hasVariants && product!.variants![selectedVariant].price
+    ? product!.variants![selectedVariant].price!
+    : product!.price
 
   return (
     <PageLayout>
@@ -135,14 +146,54 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               {product.category}
             </p>
             <h1 className="mb-2 font-serif text-xl font-bold text-foreground sm:text-2xl md:text-3xl">
-              {product.name}
+              {displayName}
             </h1>
             <p className="mb-4 text-2xl font-bold text-foreground">
-              {"\u20B9"}{product.price}
+              {"\u20B9"}{displayPrice}
             </p>
             <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
               {product.description}
             </p>
+
+            {/* Variant selector */}
+            {hasVariants && (
+              <div className="mb-6">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Variant
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {product.variants!.map((v, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { setSelectedVariant(i); setSelectedImage(0) }}
+                      className={`group flex items-center gap-2 rounded-xl border-2 px-2.5 py-2 transition-all ${selectedVariant === i
+                        ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                        : "border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                        <Image src={v.image} alt={v.label} fill className="object-cover" sizes="40px" />
+                      </div>
+                      <span className={`text-xs font-semibold ${
+                        selectedVariant === i ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                      }`}>
+                        {v.label}
+                      </span>
+                    </button>
+                  ))}
+                  {/* Show all / default option */}
+                  <button
+                    onClick={() => { setSelectedVariant(null); setSelectedImage(0) }}
+                    className={`rounded-xl border-2 px-3 py-2 text-xs font-semibold transition-all ${selectedVariant === null
+                      ? "border-primary bg-primary/5 text-primary shadow-sm shadow-primary/10"
+                      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                    }`}
+                  >
+                    Default
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Size selector */}
             {product.sizes && (

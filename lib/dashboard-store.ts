@@ -71,6 +71,7 @@ function rowToProduct(row: Record<string, unknown>): Product {
         sizes: (row.sizes as string[]) || [],
         inStock: row.in_stock !== false,
         quantity: (row.quantity as number) ?? 10,
+        variants: (row.variants as Product["variants"]) || [],
     }
 }
 
@@ -88,6 +89,7 @@ function productToRow(p: Omit<Product, "id"> & { id?: string }) {
         sizes: p.sizes || [],
         in_stock: p.inStock !== false,
         quantity: p.quantity ?? 10,
+        variants: p.variants || [],
     }
 }
 
@@ -211,6 +213,7 @@ export async function updateProduct(id: string, updates: Partial<Product>): Prom
     if (updates.sizes !== undefined) dbUpdates.sizes = updates.sizes
     if (updates.inStock !== undefined) dbUpdates.in_stock = updates.inStock
     if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity
+    if (updates.variants !== undefined) dbUpdates.variants = updates.variants
 
     const { error } = await supabase().from("products").update(dbUpdates).eq("id", id)
     if (error) throw new Error(error.message)

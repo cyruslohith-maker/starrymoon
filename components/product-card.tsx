@@ -82,6 +82,11 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </h3>
         </Link>
+        {product.variants && product.variants.length > 0 && (
+          <p className="text-[9px] font-semibold text-primary/70 sm:text-[10px]">
+            {product.variants.length} variant{product.variants.length !== 1 ? "s" : ""} available
+          </p>
+        )}
         {discountedPrice !== null ? (
           <div className="flex items-center gap-1.5 sm:gap-2">
             <p className="text-sm font-bold text-foreground sm:text-lg">{"\u20B9"}{discountedPrice}</p>

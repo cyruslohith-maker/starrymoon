@@ -267,23 +267,33 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             {/* Main content */}
             <main className="flex-1 lg:ml-60">
                 {/* Mobile top bar — premium glass effect */}
-                <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-card/80 px-4 py-3 backdrop-blur-lg lg:hidden">
+                <div className="sticky top-0 z-30 flex items-center gap-2.5 border-b border-border bg-card/80 px-3 py-2.5 backdrop-blur-lg lg:hidden">
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
                         aria-label="Open menu"
                     >
-                        <Menu className="h-5 w-5" />
+                        <Menu className="h-4.5 w-4.5" />
                     </button>
-                    <div className="flex flex-1 flex-col">
-                        <span className="font-serif text-sm font-bold text-foreground">Starrymoon</span>
-                        {currentPage && (
-                            <span className="text-[10px] font-semibold text-muted-foreground">
-                                {currentPage.label}
-                            </span>
-                        )}
+                    <div className="flex flex-1 items-center gap-2 overflow-hidden">
+                        <Image
+                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.02.22%20%281%29-p2RkRsGEwMqFoSLVEFVzaUpp6WWpyx.jpeg"
+                            alt="Starrymoon"
+                            width={28}
+                            height={28}
+                            className="shrink-0 rounded-full"
+                            style={{ width: "28px", height: "28px" }}
+                        />
+                        <div className="flex flex-col overflow-hidden">
+                            <span className="truncate font-serif text-sm font-bold text-foreground">Starrymoon</span>
+                            {currentPage && (
+                                <span className="truncate text-[10px] font-semibold text-muted-foreground">
+                                    {currentPage.label}
+                                </span>
+                            )}
+                        </div>
                     </div>
-                    <span className="rounded-full bg-gradient-to-r from-primary/10 to-pink-100 px-2.5 py-1 text-[10px] font-bold capitalize text-primary">
+                    <span className="shrink-0 rounded-full bg-gradient-to-r from-primary/10 to-pink-100 px-2.5 py-1 text-[10px] font-bold capitalize text-primary">
                         {user.role}
                     </span>
                 </div>
