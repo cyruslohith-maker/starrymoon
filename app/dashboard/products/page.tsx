@@ -335,11 +335,10 @@ export default function ProductsPage() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowBackups(!showBackups)}
-                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-colors ${
-                            showBackups
+                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-colors ${showBackups
                                 ? "bg-primary/10 text-primary border border-primary/30"
                                 : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                        }`}
+                            }`}
                     >
                         <Archive className="h-4 w-4" />
                         Backups
@@ -538,8 +537,8 @@ export default function ProductsPage() {
                                 <span className="text-sm font-bold text-foreground sm:text-lg">₹{p.price}</span>
                                 <span
                                     className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${(p.quantity ?? 0) > 0
-                                            ? "bg-emerald-500/10 text-emerald-600"
-                                            : "bg-destructive/10 text-destructive"
+                                        ? "bg-emerald-500/10 text-emerald-600"
+                                        : "bg-destructive/10 text-destructive"
                                         }`}
                                 >
                                     {(p.quantity ?? 0) > 0 ? `${p.quantity} in stock` : "Out of stock"}
@@ -717,11 +716,10 @@ export default function ProductsPage() {
                                     onDragLeave={() => setIsDragging(false)}
                                     onDrop={handleDrop}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed p-5 text-center transition-colors ${
-                                        isDragging
+                                    className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed p-5 text-center transition-colors ${isDragging
                                             ? "border-primary bg-primary/5"
                                             : "border-border hover:border-primary/50 hover:bg-secondary/30"
-                                    }`}
+                                        }`}
                                 >
                                     {imageUploading ? (
                                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -902,7 +900,7 @@ export default function ProductsPage() {
                                     </span>
                                 </label>
                                 <p className="mb-3 text-[10px] leading-relaxed text-muted-foreground">
-                                    Add different versions of this product (e.g. colors, styles). Customers will see these as selectable options — like picking a color on Amazon.
+                                    Add different versions of this product (e.g. colors, styles). Customers will see these as selectable options.
                                 </p>
 
                                 {/* Existing variants list */}
@@ -922,9 +920,8 @@ export default function ProductsPage() {
                                                     setDragVariantIdx(null)
                                                 }}
                                                 onDragEnd={() => setDragVariantIdx(null)}
-                                                className={`flex items-center gap-2 rounded-lg border bg-card p-2 transition-all ${
-                                                    dragVariantIdx === idx ? "border-primary opacity-50" : "border-border"
-                                                }`}
+                                                className={`flex items-center gap-2 rounded-lg border bg-card p-2 transition-all ${dragVariantIdx === idx ? "border-primary opacity-50" : "border-border"
+                                                    }`}
                                             >
                                                 <GripVertical className="h-3.5 w-3.5 shrink-0 cursor-grab text-muted-foreground/40 active:cursor-grabbing" />
                                                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary">
