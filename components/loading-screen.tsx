@@ -61,6 +61,7 @@ export function LoadingScreen() {
                 autoPlay
                 muted
                 playsInline
+                preload="auto"
                 className="loading-video"
             />
         </div>

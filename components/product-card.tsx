@@ -9,7 +9,7 @@ import { useCart } from "@/lib/cart-context"
 import type { Product } from "@/lib/data"
 import { getDiscountedPrice } from "@/lib/dashboard-store"
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product, priority = false }: { product: Product, priority?: boolean }) {
   const [liked, setLiked] = useState(false)
   const { addItem } = useCart()
   const [discountedPrice, setDiscountedPrice] = useState<number | null>(null)
@@ -30,7 +30,8 @@ export function ProductCard({ product }: { product: Product }) {
           fill
           className={`object-contain transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? "opacity-60 grayscale-[30%]" : ""}`}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          loading="lazy"
+          priority={priority}
+          loading={priority ? undefined : "lazy"}
         />
 
         {/* Out of Stock overlay badge */}

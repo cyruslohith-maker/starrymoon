@@ -361,8 +361,8 @@ export default function ShopClient({ initialProducts = [] }: { initialProducts?:
             </p>
             {filtered.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-                {filtered.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {filtered.map((product, i) => (
+                  <ProductCard key={product.id} product={product} priority={i < 6} />
                 ))}
               </div>
             ) : (

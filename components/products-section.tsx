@@ -65,7 +65,7 @@ export function ProductsSection({ initialProducts = [] }: { initialProducts?: Pr
       <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
-          : filtered.map((product) => <ProductCard key={product.id} product={product} />)}
+          : filtered.map((product, i) => <ProductCard key={product.id} product={product} priority={i < 4} />)}
       </div>
 
       {/* View all link */}

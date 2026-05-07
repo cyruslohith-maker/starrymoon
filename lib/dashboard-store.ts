@@ -262,10 +262,24 @@ function rowToDiscount(row: Record<string, unknown>): DiscountRule {
     }
 }
 
+let discountsCache: Promise<DiscountRule[]> | null = null;
+let discountsCacheTime = 0;
+
 export async function getDiscounts(): Promise<DiscountRule[]> {
-    const { data, error } = await supabase().from("discounts").select("*").order("created_at", { ascending: false })
-    if (error) { console.error("getDiscounts error:", error); return [] }
-    return (data || []).map(rowToDiscount)
+    const now = Date.now();
+    // Cache for 10 seconds to prevent N+1 queries on product listings
+    if (discountsCache && now - discountsCacheTime < 10000) {
+        return discountsCache;
+    }
+    
+    discountsCache = supabase().from("discounts").select("*").order("created_at", { ascending: false })
+        .then(({ data, error }) => {
+            if (error) { console.error("getDiscounts error:", error); return []; }
+            return (data || []).map(rowToDiscount);
+        });
+    discountsCacheTime = now;
+    
+    return discountsCache;
 }
 
 export async function addDiscount(rule: Omit<DiscountRule, "id">): Promise<DiscountRule> {
