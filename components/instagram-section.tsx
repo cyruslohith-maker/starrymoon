@@ -55,7 +55,7 @@ export function InstagramSection() {
           {/* Fun stats */}
           <div className="mt-8 grid grid-cols-3 gap-6">
             <div>
-              <p className="text-xl font-bold text-foreground">2,806</p>
+              <p className="text-xl font-bold text-foreground">4000+</p>
               <p className="text-[10px] font-medium text-muted-foreground">Followers</p>
             </div>
             <div>
