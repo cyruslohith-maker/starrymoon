@@ -12,9 +12,10 @@ export function InstagramSection() {
             <Image
               src="/qr-alibaba.png"
               alt="Scan to follow @starrymoon.in on Instagram"
-              width={320}
-              height={380}
-              className="rounded-2xl"
+              width={350}
+              height={495}
+              priority
+              className="rounded-2xl w-full h-auto object-cover"
             />
           </div>
         </div>
