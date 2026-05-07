@@ -10,7 +10,7 @@ export function InstagramSection() {
         <div className="flex w-full max-w-xs flex-col items-center">
           <div className="overflow-hidden rounded-3xl border border-border bg-card p-2 shadow-lg shadow-primary/10">
             <Image
-              src="/qr-code.jpeg"
+              src="/new-qr-code.jpeg"
               alt="Scan to follow @starrymoon.in on Instagram"
               width={320}
               height={380}
