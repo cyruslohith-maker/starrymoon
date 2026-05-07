@@ -21,9 +21,9 @@ export function ProductCard({ product }: { product: Product }) {
   const isOutOfStock = product.inStock === false || (product.quantity ?? 1) <= 0
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10">
+    <Link href={`/product/${product.id}`} className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-primary/20 cursor-pointer">
       {/* Image */}
-      <Link href={`/product/${product.id}`} className="relative aspect-square overflow-hidden bg-secondary">
+      <div className="relative aspect-square overflow-hidden bg-secondary">
         <Image
           src={product.image}
           alt={product.name}
@@ -60,6 +60,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             setLiked(!liked)
           }}
           className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm transition-colors hover:bg-card sm:right-3 sm:top-3 sm:h-8 sm:w-8"
@@ -70,42 +71,48 @@ export function ProductCard({ product }: { product: Product }) {
             className={`h-3.5 w-3.5 transition-colors sm:h-4 sm:w-4 ${liked ? "fill-primary text-primary" : "text-muted-foreground"}`}
           />
         </button>
-      </Link>
+      </div>
 
       {/* Info */}
       <div className="flex flex-1 flex-col gap-1 p-3 sm:gap-2 sm:p-4">
         <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground sm:text-[10px]">
           {product.category}
         </p>
-        <Link href={`/product/${product.id}`}>
-          <h3 className="text-xs font-bold leading-snug text-card-foreground hover:text-primary transition-colors sm:text-sm line-clamp-2">
+        <div>
+          <h3 className="text-xs font-bold leading-snug text-card-foreground group-hover:text-primary transition-colors sm:text-sm line-clamp-2">
             {product.name}
           </h3>
-        </Link>
+        </div>
         {product.variants && product.variants.length > 0 && (
           <p className="text-[9px] font-semibold text-primary/70 sm:text-[10px]">
             {product.variants.length} variant{product.variants.length !== 1 ? "s" : ""} available
           </p>
         )}
         {discountedPrice !== null ? (
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <p className="text-sm font-bold text-foreground sm:text-lg">{"\u20B9"}{discountedPrice}</p>
-            <p className="text-[10px] text-muted-foreground line-through sm:text-sm">{"\u20B9"}{product.price}</p>
+          <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
+            <p className="text-base font-extrabold text-primary sm:text-lg">{"\u20B9"}{discountedPrice}</p>
+            <p className="text-[10px] font-bold text-muted-foreground line-through sm:text-xs">{"\u20B9"}{product.price}</p>
           </div>
         ) : (
-          <p className="text-sm font-bold text-foreground sm:text-lg">
+          <p className="text-base font-extrabold text-primary sm:text-lg mt-0.5">
             {"\u20B9"}{product.price}
           </p>
         )}
         <div className="mt-auto flex flex-col gap-1.5 pt-1 sm:flex-row sm:items-center sm:gap-2">
           <Button
             size="sm"
-            className={`flex-1 rounded-full text-[10px] sm:text-xs ${
+            className={`flex-1 rounded-full text-[10px] font-bold shadow-md transition-all sm:text-xs ${
               isOutOfStock
                 ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
-                : "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-[1.02]"
             }`}
-            onClick={() => !isOutOfStock && addItem(product)}
+            onClick={(e) => {
+              if (!isOutOfStock) {
+                e.preventDefault()
+                e.stopPropagation()
+                addItem(product)
+              }
+            }}
             disabled={isOutOfStock}
           >
             {isOutOfStock ? (
@@ -133,6 +140,23 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
       </div>
-    </article>
+    </Link>
+  )
+}
+
+export function ProductCardSkeleton() {
+  return (
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm animate-pulse">
+      <div className="aspect-square bg-muted" />
+      <div className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
+        <div className="h-3 w-16 rounded bg-muted" />
+        <div className="h-4 w-3/4 rounded bg-muted" />
+        <div className="mt-1 h-5 w-1/4 rounded bg-muted" />
+        <div className="mt-auto flex gap-2 pt-2">
+          <div className="h-8 flex-1 rounded-full bg-muted" />
+          <div className="hidden h-8 flex-1 rounded-full bg-muted sm:block" />
+        </div>
+      </div>
+    </div>
   )
 }

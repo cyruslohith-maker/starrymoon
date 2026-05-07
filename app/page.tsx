@@ -7,8 +7,11 @@ import { InstagramSection } from "@/components/instagram-section"
 import { AboutSection } from "@/components/about-section"
 import { Footer } from "@/components/footer"
 import { CartSidebar } from "@/components/cart-sidebar"
+import { getProducts } from "@/lib/dashboard-store"
 
-export default function Home() {
+export default async function Home() {
+  const products = await getProducts()
+
   return (
     <div className="relative min-h-screen">
       {/* Pink gingham background overlay */}
@@ -27,7 +30,7 @@ export default function Home() {
         <MarqueeBanner />
         <main>
           <Hero />
-          <ProductsSection />
+          <ProductsSection initialProducts={products} />
           <CustomOrderSection />
           <AboutSection />
           <InstagramSection />

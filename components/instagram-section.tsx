@@ -5,22 +5,9 @@ import { Instagram } from "lucide-react"
 export function InstagramSection() {
   return (
     <section className="relative mx-auto max-w-7xl px-4 py-16 lg:px-8 lg:py-24">
-      <div className="flex flex-col items-center gap-10 md:flex-row md:gap-16">
-        {/* Left - QR card */}
-        <div className="flex w-full max-w-xs flex-col items-center">
-          <div className="overflow-hidden rounded-3xl border border-border bg-card p-2 shadow-lg shadow-primary/10">
-            <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/WhatsApp%20Image%202026-02-19%20at%2023.36.26-Jkj1I7ITjh7uOGKjJCDhTd8QVJqUpD.jpeg"
-              alt="Scan to follow @starrymoon.in on Instagram"
-              width={320}
-              height={380}
-              className="rounded-2xl"
-            />
-          </div>
-        </div>
-
-        {/* Right - Info */}
-        <div className="flex flex-1 flex-col items-center text-center md:items-start md:text-left">
+      <div className="flex flex-col items-center gap-10">
+        {/* Center - Info */}
+        <div className="flex flex-1 flex-col items-center text-center">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
             <Instagram className="h-5 w-5 text-primary" />
           </div>
@@ -34,7 +21,7 @@ export function InstagramSection() {
             Follow @starrymoon.in on Instagram for new drops, behind-the-scenes crafting, giveaways, and customer features. Be part of our sparkly community!
           </p>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row justify-center">
             <Button
               asChild
               size="lg"

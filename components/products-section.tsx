@@ -2,20 +2,29 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ProductCard } from "@/components/product-card"
+import { ProductCard, ProductCardSkeleton } from "@/components/product-card"
 import { Button } from "@/components/ui/button"
 import { categories } from "@/lib/data"
 import type { Product } from "@/lib/data"
 import { getProducts } from "@/lib/dashboard-store"
 import { ArrowRight } from "lucide-react"
 
-export function ProductsSection() {
+export function ProductsSection({ initialProducts = [] }: { initialProducts?: Product[] }) {
   const [active, setActive] = useState<string>("All")
-  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [allProducts, setAllProducts] = useState<Product[]>(initialProducts)
+  const [loading, setLoading] = useState(initialProducts.length === 0)
 
   useEffect(() => {
-    getProducts().then(setAllProducts).catch(console.error)
-  }, [])
+    if (initialProducts.length === 0) {
+      getProducts().then((data) => {
+        setAllProducts(data)
+        setLoading(false)
+      }).catch((err) => {
+        console.error(err)
+        setLoading(false)
+      })
+    }
+  }, [initialProducts])
 
   const filtered =
     active === "All" ? allProducts.slice(0, 8) : allProducts.filter((p) => p.category === active).slice(0, 8)
@@ -54,9 +63,9 @@ export function ProductsSection() {
 
       {/* Grid — 2 cols on mobile */}
       <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-        {filtered.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+        {loading
+          ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
+          : filtered.map((product) => <ProductCard key={product.id} product={product} />)}
       </div>
 
       {/* View all link */}

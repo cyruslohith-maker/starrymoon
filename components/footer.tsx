@@ -34,7 +34,7 @@ export function Footer() {
             <ul className="flex flex-col items-center gap-2 md:items-start">
               {[
                 { label: "Shop", href: "#shop" },
-                { label: "Custom Order", href: "#custom" },
+                { label: "Custom Order", href: "/customize" },
                 { label: "About", href: "#about" },
                 { label: "Instagram", href: "https://www.instagram.com/starrymoon.in/" },
               ].map((link) => (
