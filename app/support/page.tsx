@@ -64,7 +64,7 @@ const contactMethods = [
     icon: MessageCircle,
     title: "WhatsApp",
     description: "Message us on WhatsApp for quick responses and order updates.",
-    href: "https://wa.me/",
+    href: "https://api.whatsapp.com/send?phone=916366020581",
     label: "Open WhatsApp",
   },
 ]
