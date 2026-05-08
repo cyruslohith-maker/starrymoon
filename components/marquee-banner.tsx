@@ -6,9 +6,7 @@ const items = [
   { icon: Heart, text: "Handmade with love" },
   { icon: Star, text: "Glass beads & silver charms" },
   { icon: Sparkles, text: "Custom orders welcome" },
-  { icon: Heart, text: "Free shipping above \u20B9499" },
-  { icon: Star, text: "Sizes 5cm - 15cm" },
-  { icon: Sparkles, text: "DM to order" },
+  { icon: Star, text: "Exclusive offers available every month" },
 ]
 
 export function MarqueeBanner() {
