@@ -43,7 +43,7 @@ export default function ProductClient({ id, initialProducts = [] }: { id: string
 
   const product = allProducts.find((p) => p.id === id)
   const { addItem } = useCart()
-  const [selectedSize, setSelectedSize] = useState("7cm")
+  const [selectedSize, setSelectedSize] = useState("8cm")
   const [liked, setLiked] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedVariant, setSelectedVariant] = useState<number | null>(null)
@@ -224,7 +224,7 @@ export default function ProductClient({ id, initialProducts = [] }: { id: string
                   ))}
                 </div>
                 <p className="mt-1.5 text-[10px] text-muted-foreground">
-                  Standard size is 7cm. Not sure? DM us for help.
+                  Standard size is 8cm. Extensions are available in the checkout for free.
                 </p>
               </div>
             )}
@@ -326,25 +326,10 @@ export default function ProductClient({ id, initialProducts = [] }: { id: string
               </AccordionItem>
               <AccordionItem value="sizing" className="border-border">
                 <AccordionTrigger className="text-sm font-bold text-foreground hover:text-primary">
-                  Size Chart
+                  Sizing
                 </AccordionTrigger>
                 <AccordionContent className="text-xs leading-relaxed text-muted-foreground">
-                  <div className="overflow-hidden rounded-lg border border-border">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="bg-secondary">
-                          <th className="px-3 py-2 text-left font-bold text-secondary-foreground">Size</th>
-                          <th className="px-3 py-2 text-left font-bold text-secondary-foreground">Wrist</th>
-                          <th className="px-3 py-2 text-left font-bold text-secondary-foreground">Best For</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="border-t border-border"><td className="px-3 py-2">5-6cm</td><td className="px-3 py-2">12-14cm</td><td className="px-3 py-2">Kids</td></tr>
-                        <tr className="border-t border-border"><td className="px-3 py-2">7cm</td><td className="px-3 py-2">15-16cm</td><td className="px-3 py-2">Standard (Most teens)</td></tr>
-                        <tr className="border-t border-border"><td className="px-3 py-2">8-9cm</td><td className="px-3 py-2">17-18cm</td><td className="px-3 py-2">Loose fit / Adults</td></tr>
-                      </tbody>
-                    </table>
-                  </div>
+                  Standard size is 8cm. Extensions are available in the checkout for free.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="shipping" className="border-border">

@@ -32,7 +32,7 @@ const faqs = [
   },
   {
     q: "What if my jewelry breaks?",
-    a: "We offer free restringing within the first 3 months. After that, we charge a small fee. Just DM us on Instagram with a photo and we will sort it out.",
+    a: "We offer restringing for a small fee. Just DM us on Instagram with a photo and we will sort it out.",
   },
   {
     q: "Do you accept returns?",
@@ -48,7 +48,7 @@ const faqs = [
   },
   {
     q: "Is shipping free?",
-    a: "Shipping is free on orders above \u20B9499. For orders below that, a flat shipping charge of \u20B949 applies.",
+    a: "Shipping is free on orders above 3000. For orders below that, a shipping fees apply according to the delivery location.",
   },
 ]
 
