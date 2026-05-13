@@ -29,40 +29,54 @@ export async function POST(req: NextRequest) {
         const backupWarehouse = process.env.FSHIP_WAREHOUSE_BACKUP || "W3"
         const warehouseId = useBackupWarehouse ? backupWarehouse : primaryWarehouse
 
-        // Build Fship order payload
+        // Build Fship order payload — field names match official Fship API docs v1.2.3.2
         const fshipPayload = {
-            shipment_type: "forward",
-            order_id: order.id,
-            payment_mode: order.paymentMode === "COD" ? "COD" : "Prepaid",
-            cod_amount: order.paymentMode === "COD" ? order.total : 0,
-            order_amount: order.total,
-            // Pickup from selected warehouse
-            address_id: warehouseId,
             // Customer / delivery details
-            customer_name: order.customerName,
-            customer_phone: order.phone,
-            customer_email: order.email || "",
-            delivery_address_line1: order.address,
-            delivery_address_line2: "",
-            delivery_city: order.city,
-            delivery_state: order.state,
-            delivery_pincode: order.pincode,
-            delivery_country: "India",
-            // Package details (defaults for jewelry)
-            weight: 0.2, // 200g in kg
-            length: 15,
-            breadth: 10,
-            height: 5,
+            customer_Name: order.customerName,
+            customer_Mobile: order.phone,
+            customer_Emailid: order.email || "",
+            customer_Address: order.address,
+            landMark: "",
+            customer_Address_Type: "Home",
+            customer_PinCode: order.pincode,
+            customer_City: order.city,
+            // Order details
+            orderId: order.id,
+            invoice_Number: order.id,
+            payment_Mode: order.paymentMode === "COD" ? 1 : 2, // 1=COD, 2=PREPAID
+            express_Type: "surface",
+            is_Ndd: 0,
+            order_Amount: order.total,
+            tax_Amount: 0,
+            extra_Charges: 0,
+            total_Amount: order.total,
+            cod_Amount: order.paymentMode === "COD" ? order.total : 0,
+            // Package details (defaults for jewelry — weight in kg, dimensions in cm)
+            shipment_Weight: 0.2,
+            shipment_Length: 15,
+            shipment_Width: 10,
+            shipment_Height: 5,
+            volumetric_Weight: (15 * 10 * 5) / 5000, // LxBxH/5000
+            latitude: 0,
+            longitude: 0,
+            // Pickup warehouse
+            pick_Address_ID: parseInt(warehouseId.replace(/\D/g, ""), 10) || 0,
             // Products
             products: order.items.map((item: { productName: string; productId: string; quantity: number; price: number }) => ({
-                product_name: item.productName,
-                product_sku: item.productId,
-                product_quantity: item.quantity,
-                product_price: item.price,
+                productId: item.productId,
+                productName: item.productName,
+                unitPrice: item.price,
+                quantity: item.quantity,
+                productCategory: "Jewellery",
+                hsnCode: "",
+                sku: item.productId,
+                taxRate: 0,
+                productDiscount: 0,
             })),
+            courierId: 0, // 0 = auto-assign best courier
         }
 
-        const fshipResponse = await fetch("https://capi.fship.in/api/createorder", {
+        const fshipResponse = await fetch("https://capi.fship.in/api/createforwardorder", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
