@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
             // Customer / delivery details
             customer_Name: order.customerName,
             customer_Mobile: order.phone,
-            customer_Emailid: order.email || "",
+            customer_Emailid: order.email || "orders@st4rrymoon.com",
             customer_Address: order.address,
             landMark: "",
             customer_Address_Type: "Home",
