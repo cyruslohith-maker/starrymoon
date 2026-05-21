@@ -88,7 +88,7 @@
 
   body {
     @apply text-foreground;
-    background-color: #FFF5F7;
+    background-color: #FEBEC3;
     background-image: url('/images/gingham-bg.jpeg');
     background-size: 300px 300px;
     background-repeat: repeat;
@@ -174,6 +174,7 @@
   justify-content: center;
   background: #FEBEC3;
   transition: opacity 0.6s ease, visibility 0.6s ease;
+  overflow: hidden;
 }
 
 .loading-screen--hidden {
@@ -188,8 +189,11 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  transform: translateX(-1.5%);
+  object-fit: cover;
+  /* Safari iOS: force GPU layer to prevent green box artifact */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  background: #FEBEC3;
 }
 
 /* Hide scrollbar but keep scroll */

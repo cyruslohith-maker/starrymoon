@@ -9,9 +9,10 @@ export function LoadingScreen() {
 
     /* Hide body content while loading */
     useEffect(() => {
-        // Immediately hide overflow + set bg to prevent flash
+        // Immediately hide overflow + set bg to match loading screen (prevents iOS flash)
         document.documentElement.style.overflow = "hidden"
         document.body.style.overflow = "hidden"
+        document.body.style.backgroundColor = "#FEBEC3"
 
         return () => {
             document.documentElement.style.overflow = ""
