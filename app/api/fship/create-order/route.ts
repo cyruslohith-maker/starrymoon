@@ -24,10 +24,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Missing order data" }, { status: 400 })
         }
 
-        // Warehouse selection: W0 (primary) by default, W3 (backup) when flagged
-        const primaryWarehouse = process.env.FSHIP_WAREHOUSE_PRIMARY || "W0"
-        const backupWarehouse = process.env.FSHIP_WAREHOUSE_BACKUP || "W3"
-        const warehouseId = useBackupWarehouse ? backupWarehouse : primaryWarehouse
+        // Warehouse selection — env vars must be numeric IDs from Fship Dashboard → Manage Warehouse
+        const primaryWarehouseId = parseInt(process.env.FSHIP_WAREHOUSE_PRIMARY_ID || "0", 10)
+        const backupWarehouseId = parseInt(process.env.FSHIP_WAREHOUSE_BACKUP_ID || "0", 10)
+        const warehouseId = useBackupWarehouse ? backupWarehouseId : primaryWarehouseId
 
         // Build Fship order payload — field names match official Fship API docs v1.2.3.2
         const fshipPayload = {
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
             latitude: 0,
             longitude: 0,
             // Pickup warehouse
-            pick_Address_ID: parseInt(warehouseId.replace(/\D/g, ""), 10) || 0,
+            pick_Address_ID: warehouseId,
             // Products
             products: order.items.map((item: { productName: string; productId: string; quantity: number; price: number }) => ({
                 productId: item.productId,
