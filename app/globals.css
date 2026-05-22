@@ -175,6 +175,9 @@
   background: #FEBEC3;
   transition: opacity 0.6s ease, visibility 0.6s ease;
   overflow: hidden;
+  /* Safari on iOS ignores overflow:hidden on transformed children — clip-path forces it */
+  -webkit-clip-path: inset(0);
+  clip-path: inset(0);
 }
 
 .loading-screen--hidden {
