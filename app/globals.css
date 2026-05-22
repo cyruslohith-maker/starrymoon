@@ -183,39 +183,44 @@
   pointer-events: none;
 }
 
-/* Video */
+/* Video — mobile default: contain so character isn't zoomed in on portrait screens */
 .loading-video {
   position: absolute;
   /* Push 4px past all edges so Safari transparent-corner artifacts get clipped */
   inset: -4px;
   width: calc(100% + 8px);
   height: calc(100% + 8px);
-  object-fit: cover;
-  object-position: center center;
+  object-fit: contain;
+  /* Anchor to bottom so green corner stays at bottom-right (covered by ::after) */
+  object-position: center bottom;
   /* Safari iOS: force GPU composite layer */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   background: #FEBEC3;
 }
 
-/* Desktop: shift video left and raise slightly so character is well-framed */
+/* Desktop: switch to cover + shift left so character hops in naturally */
 @media (min-width: 768px) {
   .loading-video {
+    object-fit: cover;
     object-position: 28% 38%;
+    /* cover + left shift pushes green area off-screen — no overlay needed */
   }
 }
 
-/* Cover bottom-right corner where Safari renders WebM green */
-.loading-screen::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 80px;
-  height: 100px;
-  background: #FEBEC3;
-  z-index: 1;
-  pointer-events: none;
+/* Mobile: cover bottom-right where video frame's green corner lands */
+@media (max-width: 767px) {
+  .loading-screen::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100px;
+    height: 80px;
+    background: #FEBEC3;
+    z-index: 1;
+    pointer-events: none;
+  }
 }
 
 /* Hide scrollbar but keep scroll */
