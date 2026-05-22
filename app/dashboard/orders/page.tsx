@@ -364,7 +364,7 @@ export default function OrdersPage() {
                 <div className="flex items-start gap-3">
                     <Truck className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
                     <div>
-                        <p className="text-sm font-bold text-violet-900">Fship Logistics — Live Tracking + Auto-Import</p>
+                        <p className="text-sm font-bold text-violet-900">Fship Logistics: Live Tracking + Auto-Import</p>
                         <p className="mt-1 text-xs text-violet-700">
                             Customer orders are saved automatically. Use &quot;Export CSV&quot; for bulk upload or &quot;Push to Fship&quot; per order for direct API integration.
                         </p>
@@ -488,7 +488,7 @@ export default function OrdersPage() {
                                                 {pushingId === o.id ? (
                                                     <><Loader2 className="h-3 w-3 animate-spin" /> Pushing...</>
                                                 ) : (
-                                                    <><Send className="h-3 w-3" /> Push (W0 — Primary)</>
+                                                    <><Send className="h-3 w-3" /> Push W0 (Primary)</>
                                                 )}
                                             </button>
                                             <button
@@ -496,7 +496,7 @@ export default function OrdersPage() {
                                                 disabled={pushingId === o.id}
                                                 className="flex items-center gap-1 rounded-lg bg-amber-500/10 px-3 py-1.5 text-[10px] font-bold text-amber-600 transition-colors hover:bg-amber-500/20 disabled:opacity-50"
                                             >
-                                                <Send className="h-3 w-3" /> Push (W3 — Backup)
+                                                <Send className="h-3 w-3" /> Push W1 (Backup)
                                             </button>
                                         </div>
                                     )}

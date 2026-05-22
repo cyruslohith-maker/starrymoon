@@ -571,7 +571,7 @@ export default function ProfilePage() {
                                 </div>
                                 <p className="text-xs text-foreground">{addr.line}</p>
                                 <p className="text-xs text-muted-foreground">
-                                    {addr.city}{addr.state ? `, ${addr.state}` : ""} — {addr.pincode}
+                                {addr.city}{addr.state ? `, ${addr.state}` : ""} - {addr.pincode}
                                 </p>
                                 <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                     <button
@@ -603,32 +603,32 @@ export default function ProfilePage() {
                             <div className="grid gap-2">
                                 <input
                                     value={addrForm.label}
-                                    onChange={(e) => setAddrForm({ ...addrForm, label: e.target.value })}
+                                    onChange={(e) => setAddrForm(prev => ({ ...prev, label: e.target.value }))}
                                     placeholder="Label (e.g. Home, Office, Hostel)"
                                     className="rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
                                 />
                                 <input
                                     value={addrForm.line}
-                                    onChange={(e) => setAddrForm({ ...addrForm, line: e.target.value })}
+                                    onChange={(e) => setAddrForm(prev => ({ ...prev, line: e.target.value }))}
                                     placeholder="Full address line"
                                     className="rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
                                 />
                                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                                     <input
                                         value={addrForm.city}
-                                        onChange={(e) => setAddrForm({ ...addrForm, city: e.target.value })}
+                                        onChange={(e) => setAddrForm(prev => ({ ...prev, city: e.target.value }))}
                                         placeholder="City"
                                         className="rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
                                     />
                                     <input
                                         value={addrForm.state}
-                                        onChange={(e) => setAddrForm({ ...addrForm, state: e.target.value })}
+                                        onChange={(e) => setAddrForm(prev => ({ ...prev, state: e.target.value }))}
                                         placeholder="State"
                                         className="rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
                                     />
                                     <input
                                         value={addrForm.pincode}
-                                        onChange={(e) => setAddrForm({ ...addrForm, pincode: e.target.value })}
+                                        onChange={(e) => setAddrForm(prev => ({ ...prev, pincode: e.target.value }))}
                                         placeholder="Pincode"
                                         className="rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary"
                                     />

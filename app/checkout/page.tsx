@@ -35,6 +35,29 @@ async function lookupPincode(pin: string): Promise<{ city: string; state: string
     return null
 }
 
+/* ─── Field helper — must be outside CheckoutPage to avoid remount on every render ─── */
+const inputCls = "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
+const errCls = "border-destructive"
+
+function Field({ id, label, required, error, children }: {
+    id: string; label: string; required?: boolean; error?: string
+    children: React.ReactNode
+}) {
+    return (
+        <div>
+            <label htmlFor={id} className="mb-1 block text-xs font-bold text-muted-foreground">
+                {label} {required && <span className="text-destructive">*</span>}
+            </label>
+            {children}
+            {error && (
+                <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-destructive">
+                    <AlertCircle className="h-3 w-3" /> {error}
+                </p>
+            )}
+        </div>
+    )
+}
+
 /* ─── Component ───────────────────────────────────── */
 
 export default function CheckoutPage() {
@@ -248,26 +271,6 @@ export default function CheckoutPage() {
         )
     }
 
-    /* ─── Helper: field wrapper ─── */
-    const Field = ({ id, label, required, error, children }: {
-        id: string; label: string; required?: boolean; error?: string
-        children: React.ReactNode
-    }) => (
-        <div>
-            <label htmlFor={id} className="mb-1 block text-xs font-bold text-muted-foreground">
-                {label} {required && <span className="text-destructive">*</span>}
-            </label>
-            {children}
-            {error && (
-                <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-destructive">
-                    <AlertCircle className="h-3 w-3" /> {error}
-                </p>
-            )}
-        </div>
-    )
-
-    const inputCls = "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
-    const errCls = "border-destructive"
 
     return (
         <PageLayout>
@@ -439,9 +442,9 @@ export default function CheckoutPage() {
                             </div>
 
                             {city && state && (
-                                <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+                                    <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
                                     <Check className="h-3.5 w-3.5" />
-                                    {city}, {state} — Delivery available ✓
+                                    {city}, {state} - Delivery available ✓
                                 </div>
                             )}
                         </div>
@@ -481,7 +484,7 @@ export default function CheckoutPage() {
                                     {isPlacing ? (
                                         <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Placing Order...</>
                                     ) : (
-                                        <>Place Order — ₹{total} <ArrowRight className="ml-2 h-4 w-4" /></>
+                                        <>Place Order - ₹{total} <ArrowRight className="ml-2 h-4 w-4" /></>
                                     )}
                                 </Button>
                                 {placeError && (
