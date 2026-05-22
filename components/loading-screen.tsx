@@ -62,7 +62,6 @@ export function LoadingScreen() {
         >
             <video
                 ref={videoRef}
-                src="/loading-mascot.webm"
                 autoPlay
                 muted
                 playsInline
@@ -70,7 +69,11 @@ export function LoadingScreen() {
                 disablePictureInPicture
                 className="loading-video"
                 style={{ pointerEvents: "none" }}
-            />
+            >
+                {/* MP4 first — no alpha issues, green baked out, works perfectly on Safari */}
+                <source src="/loading-mascot.mp4" type="video/mp4" />
+                <source src="/loading-mascot.webm" type="video/webm" />
+            </video>
         </div>
     )
 }
