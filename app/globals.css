@@ -207,7 +207,7 @@
 @media (min-width: 768px) {
   .loading-video {
     object-fit: cover;
-    object-position: 22% 38%;
+    object-position: 16% 38%;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
   }
