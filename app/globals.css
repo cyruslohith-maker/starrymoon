@@ -198,6 +198,13 @@
   background: #FEBEC3;
 }
 
+/* Desktop: shift video slightly left so character's hop-in from left edge is visible */
+@media (min-width: 768px) {
+  .loading-video {
+    object-position: 38% center;
+  }
+}
+
 /* Belt-and-suspenders: cover bottom-right corner where Safari shows green WebM area */
 .loading-screen::after {
   content: '';
