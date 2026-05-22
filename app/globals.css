@@ -198,14 +198,14 @@
   background: #FEBEC3;
 }
 
-/* Belt-and-suspenders: cover bottom-right corner where Safari shows green on WebM */
+/* Belt-and-suspenders: cover bottom-right corner where Safari shows green WebM area */
 .loading-screen::after {
   content: '';
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 32px;
-  height: 32px;
+  width: 200px;
+  height: 260px;
   background: #FEBEC3;
   z-index: 1;
   pointer-events: none;

@@ -39,6 +39,9 @@ export function LoadingScreen() {
         const handleEnded = () => dismiss()
         video.addEventListener("ended", handleEnded)
 
+        // Force play on iOS Safari — autoPlay attribute alone is not always enough
+        video.play().catch(() => { /* blocked — fallback timer handles dismiss */ })
+
         // Fallback: auto-dismiss after 5s
         const fallback = setTimeout(dismiss, 5000)
 
