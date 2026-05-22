@@ -12,7 +12,7 @@ export function LoadingScreen() {
         // Immediately hide overflow + set bg to match loading screen (prevents iOS flash)
         document.documentElement.style.overflow = "hidden"
         document.body.style.overflow = "hidden"
-        document.body.style.backgroundColor = "#FEBEC3"
+        document.body.style.backgroundColor = "#FEC2C5"
 
         return () => {
             document.documentElement.style.overflow = ""

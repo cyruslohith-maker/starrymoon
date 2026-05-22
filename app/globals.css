@@ -172,7 +172,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #FEBEC3;
+  background: #FEC2C5;
   transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
   overflow: hidden;
   /* Safari: GPU layer for smooth fade */
@@ -200,7 +200,7 @@
   /* scale(1.4) → 219px tall video becomes 307px, right edge 546px clips green off-screen */
   -webkit-transform: scale(1.4) translateZ(0);
   transform: scale(1.4) translateZ(0);
-  background: #FEBEC3;
+  background: #FEC2C5;
 }
 
 /* Desktop: cover + shift left so character hops in from left */
@@ -221,7 +221,7 @@
     right: 0;
     width: 22vw;
     height: 22vh;
-    background: #FEBEC3;
+    background: #FEC2C5;
     z-index: 1;
     pointer-events: none;
   }
