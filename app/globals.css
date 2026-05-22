@@ -186,14 +186,29 @@
 /* Video */
 .loading-video {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  /* Push 4px past all edges so Safari transparent-corner artifacts get clipped */
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
   object-fit: cover;
-  /* Safari iOS: force GPU layer to prevent green box artifact */
+  object-position: center center;
+  /* Safari iOS: force GPU composite layer */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   background: #FEBEC3;
+}
+
+/* Belt-and-suspenders: cover bottom-right corner where Safari shows green on WebM */
+.loading-screen::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  background: #FEBEC3;
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* Hide scrollbar but keep scroll */
