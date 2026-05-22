@@ -200,13 +200,27 @@
   background: #FEBEC3;
 }
 
-/* Desktop: cover + left shift — fills screen, character hops in naturally, green off-screen */
+/* Desktop: cover + left shift — fills screen, character hops in naturally */
 @media (min-width: 768px) {
   .loading-video {
     object-fit: cover;
     object-position: 28% 38%;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
+  }
+
+  /* Bottom-right green corner overlay — percentage-based so it works at any screen size */
+  /* Animation is always center-left so this 22vw×22vh patch is safely out of the way */
+  .loading-screen::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 22vw;
+    height: 22vh;
+    background: #FEBEC3;
+    z-index: 1;
+    pointer-events: none;
   }
 }
 

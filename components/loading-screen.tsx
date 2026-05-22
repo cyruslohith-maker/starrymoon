@@ -40,7 +40,8 @@ export function LoadingScreen() {
         video.addEventListener("ended", handleEnded)
 
         // Force play on iOS Safari — autoPlay attribute alone is not always enough
-        video.play().catch(() => { /* blocked — fallback timer handles dismiss */ })
+        // If autoplay is blocked (Safari macOS policy), dismiss immediately — don't show stuck green frame
+        video.play().catch(() => dismiss())
 
         // Fallback: auto-dismiss after 5s
         const fallback = setTimeout(dismiss, 5000)
@@ -66,7 +67,9 @@ export function LoadingScreen() {
                 muted
                 playsInline
                 preload="auto"
+                disablePictureInPicture
                 className="loading-video"
+                style={{ pointerEvents: "none" }}
             />
         </div>
     )
