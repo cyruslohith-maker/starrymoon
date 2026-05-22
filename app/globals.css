@@ -173,11 +173,14 @@
   align-items: center;
   justify-content: center;
   background: #FEBEC3;
-  transition: opacity 0.6s ease, visibility 0.6s ease;
+  transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
   overflow: hidden;
-  /* Safari on iOS ignores overflow:hidden on transformed children — clip-path forces it */
+  /* Safari: GPU layer for smooth fade */
   -webkit-clip-path: inset(0);
   clip-path: inset(0);
+  will-change: opacity;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .loading-screen--hidden {
@@ -200,11 +203,11 @@
   background: #FEBEC3;
 }
 
-/* Desktop: cover + left shift — fills screen, character hops in naturally */
+/* Desktop: cover + shift left so character hops in from left */
 @media (min-width: 768px) {
   .loading-video {
     object-fit: cover;
-    object-position: 28% 38%;
+    object-position: 22% 38%;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
   }
